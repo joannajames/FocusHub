@@ -1,18 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from controller import router
+import mysql.connector
 
 app = FastAPI()
 
+# ✅ CORS Middleware (must be before routes)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Open to intranet users
+    allow_origins=["*"],  # Vue frontend URL
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(router)
 
-@app.get("/")
-async def root():
-    return {"message": "FocusHub API is running"}
+@app.get("/study_spots")
+def get_study_spots():
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="SQLPassCod3!",
+        database="study_spots_db"
+    )
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, name, location AS address, hours FROM study_spots")
+
+    spots = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return spots
