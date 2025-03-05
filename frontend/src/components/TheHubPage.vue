@@ -411,6 +411,7 @@ const getStarsArray = (rating) => {
   border-radius: 15px;
 }
 
+<<<<<<< Updated upstream
 .listing-rating {
   display: flex;
   justify-content: flex-end;
@@ -422,3 +423,6 @@ const getStarsArray = (rating) => {
   height: 30px;
 }
 </style>
+=======
+</style>
+>>>>>>> Stashed changes
