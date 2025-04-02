@@ -1,63 +1,89 @@
 <template>
   <div class="container">
+    <!-- Header -->
     <header class="header">
-
       <div class="nav-container">
-        <img src="/icons/Menu_Burger.png" alt="Menu" class="icon menu-icon" @click="toggleDropdown" />
-        <ul v-if="isDropdownOpen" class="dropdown">
-          <li><a href="#" @click="navigateTo('/contact_us')">Contact Us</a></li>
+        <img
+          src="/icons/Menu_Burger.png"
+          alt="Menu"
+          class="icon menu-icon"
+        />
+        <ul class="dropdown">
+          <li><a @click="navigateTo('/the_hub')">The Hub</a></li>
+          <li><a @click="navigateTo('/contact_us')">Contact Us</a></li>
+          <li><a @click="navigateTo('/account')">Account</a></li>
         </ul>
       </div>
-
-      <div class="search-bar">
-        <img src="/icons/Search_Magnifying_Glass.png" alt="Search" class="icon search-icon" />
-        <input type="text" v-model="searchQuery" placeholder="e.g. Boston Public Library (Copley)" class="search-input" />
-      </div>
-
-      <img src="/icons/User_Account.png" alt="Account" class="icon account-icon" @click="goToAccount" />
+      <img
+        src="/icons/FocushubLogo.png"
+        alt="FocusHub Logo"
+        class="logo-icon"
+        @click="navigateTo('/')"
+      />
     </header>
 
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <img src="/icons/Magnifying_Glass.png" alt="Search" class="search-icon" />
+      <input
+        type="text"
+        v-model="searchQuery"
+        placeholder="e.g. Boston Public Library (Copley)"
+        class="search-input"
+      />
+    </div>
+
+    <!-- Content -->
     <div class="content-wrapper">
+      <!-- Sidebar -->
       <aside class="sidebar">
-        <img src="/filters/Filter_Shhh.png" alt="Quiet" class="filter shhh-filter"/>
-        <img src="/filters/Filter_Wifi.png" alt="WiFi" class="filter wifi-filter"/>
-        <img src="/filters/Filter_Charger.png" alt="Outlets" class="filter charger-filter"/>
-        <img src="/filters/Filter_Printer.png" alt="Printing" class="filter printer-filter"/>
-        <img src="/filters/Filter_OpenLate.png" alt="Late Sesh" class="filter openlate-filter"/>
-        <img src="/filters/Filter_WaterBottle.png" alt="H2O Station" class="filter waterbottle-filter"/>
-        <img src="/filters/Filter_Proximity.png" alt="Closeby?" class="filter proximity-filter"/>
+        <img src="/filters/Filter_Shhh.png" alt="Quiet" class="filter" />
+        <img src="/filters/Filter_Wifi.png" alt="WiFi" class="filter" />
+        <img src="/filters/Filter_Charger.png" alt="Outlets" class="filter" />
+        <img src="/filters/Filter_Printer.png" alt="Printing" class="filter" />
+        <img src="/filters/Filter_Clock.png" alt="Late Sesh" class="filter" />
+        <img src="/filters/Filter_WaterBottle.png" alt="H2O Station" class="filter" />
+        <img src="/filters/Filter_Proximity.png" alt="Closeby?" class="filter" />
       </aside>
 
-    <main class="main-content">
-      <h1 class="hub-title">The Hub</h1>
+      <!-- Main -->
+      <main class="main-content">
+        <h1 class="hub-title">The Hub</h1>
 
-      <div class="day-selector">
-        <div v-for="(day, index) in days" :key="index" class="day-item">
-          <img
-            :src="`/icons/Calendar_${day}.png`"
-            :alt="day"
-            class="icon calendar-icon"
-            @click="selectedDay = day"
-            :class="{ active: selectedDay === day }"
-          />
+        <!-- Day Selector -->
+        <div class="day-selector">
+          <div v-for="(day, index) in days" :key="index" class="day-item">
+            <img
+              :src="`/icons/Calendar_${day}.png`"
+              :alt="day"
+              class="calendar-icon"
+              @click="selectedDay = day"
+              :class="{ active: selectedDay === day }"
+            />
+          </div>
         </div>
-      </div>
 
+        <!-- Listings -->
         <div class="listings">
-          <div v-for="listing in filteredListings" :key="listing.id" class="listing-card">
-            <div class="listing-box">
-              <div class="listing-image-placeholder"></div>
-              <div class="listing-info">
-                <h3 class="listing-title">{{ listing.name }}</h3>
-                <p class="listing-address">{{ listing.address }} • {{ listing.opening_hours[selectedDay] }}</p>
-                <div class="listing-tags">
-                  <span v-for="(tag, i) in listing.attributes" :key="i" class="tag" :style="{ backgroundColor: tag.color }">
-                    {{ tag.name }}
-                  </span>
-                </div>
-                <div class="listing-rating">
-                    <img v-for="star in getStarsArray(listing.rating)" :key="star.id" :src="star.src" :alt="star.alt" class="icon star-icon" />
-                </div>
+          <div v-for="listing in filteredListings" :key="listing.id" class="listing-box">
+            <div class="listing-info">
+              <h3 class="listing-title">{{ listing.name }}</h3>
+              <p class="listing-address">
+                {{ listing.address }} • {{ listing.opening_hours[selectedDay] }}
+              </p>
+              <div class="listing-tags">
+                <span v-for="(tag, i) in listing.attributes" :key="i" class="tag" :style="{ backgroundColor: tag.color }">
+                  {{ tag.name }}
+                </span>
+              </div>
+              <div class="listing-rating">
+                <img
+                  v-for="star in getStarsArray(listing.rating)"
+                  :key="star.id"
+                  :src="star.src"
+                  :alt="star.alt"
+                  class="star-icon"
+                />
               </div>
             </div>
           </div>
@@ -68,19 +94,12 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
+import { ref, computed } from 'vue';
 
-const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 const selectedDay = ref('Monday');
 const activeFilter = ref(null);
 
-const goToAccount = () => {
-  window.location.href = "/account";
-};
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value;
-};
 const navigateTo = (path) => {
   window.location.href = path;
 };
@@ -99,9 +118,9 @@ const listings = ref([
     },
     rating: 3.2,
     attributes: [
-      {name: 'e-accessible', color: '#badafb'},
-      {name: 'printing', color: '#c5f3af'},
-      {name: 'prayer space', color: '#ffcdae'}
+      { name: 'e-accessible', color: '#badafb' },
+      { name: 'printing', color: '#c5f3af' },
+      { name: 'prayer space', color: '#ffcdae' }
     ]
   },
   {
@@ -115,9 +134,9 @@ const listings = ref([
     },
     rating: 4.6,
     attributes: [
-      {name: 'free', color: '#c5f3af'},
-      {name: 'AC', color: '#ffcdae'},
-      {name: 'vegan', color: '#ffbbbc'}
+      { name: 'free', color: '#c5f3af' },
+      { name: 'AC', color: '#ffcdae' },
+      { name: 'vegan', color: '#ffbbbc' }
     ]
   },
   {
@@ -131,24 +150,23 @@ const listings = ref([
     },
     rating: 4.8,
     attributes: [
-      {name: 'e-accessible', color: '#badafb'},
-      {name: 'printing', color: '#c5f3af'},
-      {name: 'prayer space', color: '#ffcdae'}
+      { name: 'e-accessible', color: '#badafb' },
+      { name: 'printing', color: '#c5f3af' },
+      { name: 'prayer space', color: '#ffcdae' }
     ]
   },
 ]);
 
 const filteredListings = computed(() => {
   return listings.value.filter(listing =>
-      listing.opening_hours[selectedDay.value] &&
-      (!activeFilter.value || listing.attributes.some(tag => tag.name === activeFilter.value))
+    listing.opening_hours[selectedDay.value] &&
+    (!activeFilter.value || listing.attributes.some(tag => tag.name === activeFilter.value))
   );
 });
 
 const getStarsArray = (rating) => {
-  const rounded = Math.round(rating * 2) / 2; // Round to nearest 0.5
+  const rounded = Math.round(rating * 2) / 2;
   let starsArray = [];
-
   for (let i = 1; i <= 5; i++) {
     if (i <= Math.floor(rounded)) {
       starsArray.push({ id: i, src: '/icons/Full_Star.png', alt: 'Full Star' });
@@ -163,52 +181,74 @@ const getStarsArray = (rating) => {
 </script>
 
 <style scoped>
-@import '@fontsource/rubik-doodle-shadow';
-@import url('https://fonts.googleapis.com/css2?family=Monofett&display=swap');
-
+/* Header + Branding */
 @font-face {
   font-family: 'Sansation Light';
   src: url('@/assets/Sansation_Light.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+}
+
+@import '@fontsource/rubik-doodle-shadow';
+
+.menu-icon {
+  width: auto;
+  height: auto;
+  margin-top: 10px;
 }
 
 .container {
   background: #fdfde3;
-  padding: 120px;
-}
-
-.content-wrapper {
-  display: flex;
+  padding: 180px 60px 40px;
+  font-family: 'Sansation Light', sans-serif;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  height: 90px;
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
   background: #fdfde3;
-  padding: 32px 2px;
+  padding: 30px 40px;
+  height: 80px;
+  z-index: 1000;
+  box-sizing: border-box;
 }
 
-.menu-icon {
-  width: 250px;
-  height: 350px;
+.icon {
+  width: 220px;
+  height: 170px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  width: 120px;
+  height: auto;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.nav-container {
+  position: relative;
 }
 
 .dropdown {
-  font-family: 'Sansation Light',serif;
-  font-size: 20px;
+  display: none;
   position: absolute;
   top: 150px;
   right: 0;
-  border: 1px solid black;
   background: #fdfde3;
-  padding: 10px 45px;
+  border: 1px solid black;
+  list-style: none;
+  padding: 10px;
+  font-size: 20px;
+  font-family: 'Sansation Light', sans-serif;
+}
+
+.nav-container:hover .dropdown {
+  display: block;
 }
 
 .dropdown li {
@@ -216,147 +256,76 @@ const getStarsArray = (rating) => {
 }
 
 .dropdown li a {
-  color: black;
   text-decoration: none;
+  color: black;
 }
 
 .search-bar {
-  width: 1100px;
-  height: 35px;
   position: absolute;
   right: 280px;
   top: 57px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 5px;
+  padding: 5px 15px;
   border: 2px solid black;
   border-radius: 25px;
   background: #f9fdad;
 }
 
 .search-input {
-  font-family: 'Sansation Light',serif;
-  font-size: 16px;
-  width: 1000px;
-  position: absolute;
-  right: 80px;
-  top: 13px;
+  background: #f9fdad;
   border: none;
   outline: none;
-  background: #f9fdad;
+  font-family: 'Sansation Light';
+  font-size: 16px;
+  width: 400px;
 }
 
 .search-icon {
-  cursor: pointer;
-  width: 250px;
-  height: 200px;
-  position: absolute;
-  left: 1100px;
-  top: -110px;
+  width: 40px;
+  height: 40px;
 }
 
-.account-icon {
-  width: 200px;
-  height: 150px;
+.content-wrapper {
+  display: flex;
+  margin-top: 100px;
 }
 
 .sidebar {
-  width: 55px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-right: 10px;
+  gap: 20px;
+  padding-right: 20px;
 }
 
-.shhh-filter {
+.filter {
+  width: 60px;
+  height: auto;
   cursor: pointer;
-  width: 100px;
-  height: 50px;
-  position: absolute;
-  left: 70px;
-  top: 175px;
 }
 
-.wifi-filter {
-  cursor: pointer;
-  width: 80px;
-  height: 60px;
-  position: absolute;
-  left: 75px;
-  top: 260px;
+.main-content {
+  flex-grow: 1;
 }
 
-.charger-filter {
-  cursor: pointer;
-  width: 100px;
-  height: 80px;
-  position: absolute;
-  left: 65px;
-  top: 355px;
-}
-
-.printer-filter {
-  cursor: pointer;
-  width: 95px;
-  height: 105px;
-  position: absolute;
-  left: 65px;
-  top: 460px;
-}
-
-.openlate-filter {
-  cursor: pointer;
-  width: 350px;
-  height: 270px;
-  position: absolute;
-  left: -40px;
-  top: 435px;
-}
-
-.waterbottle-filter {
-  cursor: pointer;
-  width: 65px;
-  height: 130px;
-  position: absolute;
-  left: 80px;
-  top: 690px;
-}
-
-.proximity-filter {
-  cursor: pointer;
-  width: 55px;
-  height: 75px;
-  position: absolute;
-  left: 85px;
-  top: 850px;
-}
-
-.icon {
-  cursor: pointer;
-  width: 250px;
-  height: 200px;
+.hub-title {
+  font-family: 'Rubik Doodle Shadow', cursive;
+  font-size: 100px;
+  margin-bottom: 20px;
 }
 
 .day-selector {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
   gap: 15px;
-  margin-top: -20px;
-}
-
-.day-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
+  margin-bottom: 30px;
 }
 
 .calendar-icon {
   width: 60px;
   height: 60px;
-  transition: transform 0.4s ease-in-out;
+  transition: transform 0.4s;
 }
 
 .calendar-icon.active {
@@ -364,61 +333,48 @@ const getStarsArray = (rating) => {
   filter: brightness(0.6);
 }
 
-.main-content {
-  flex-grow: 1;
-  margin-left: 40px;
-}
-
-.hub-title {
-  font-family: 'Rubik Doodle Shadow', cursive;
-  font-size: 120px;
-  margin-bottom: 5px;
-}
-
 .listing-box {
   border: 2px solid black;
   border-radius: 30px;
-  margin-bottom: 15px; /* distance between boxes */
+  margin-bottom: 20px;
   background: #fdfde3;
+  padding: 20px;
 }
 
 .listing-title {
   font-family: 'Monofett', cursive;
-  font-weight: lighter;
-  font-size: 38px;
-  color: black;
-  margin-bottom: 3px;
+  font-size: 32px;
+  margin-bottom: 10px;
 }
 
 .listing-address {
-  font-family: 'Sansation Light', sans-serif;
-  font-size: 20px;
-  color: black;
-  margin-bottom: 20px; /* distance between what follows, i.e. tags */
+  font-size: 18px;
+  margin-bottom: 12px;
 }
 
 .listing-tags {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .tag {
   font-family: 'Rubik Doodle Shadow', cursive;
   font-size: 14px;
-  color: black;
-  padding: 5px 10px; /* tag size */
   border: 2px solid black;
   border-radius: 15px;
+  padding: 4px 10px;
 }
 
 .listing-rating {
   display: flex;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 4px;
 }
 
 .star-icon {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
 }
 </style>
