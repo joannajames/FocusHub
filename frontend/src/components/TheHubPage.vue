@@ -4,27 +4,48 @@
       <div class="nav-container">
         <img src="/icons/Menu_Burger.png" alt="Menu" class="icon menu-icon" @click="toggleDropdown" />
         <ul v-if="isDropdownOpen" class="dropdown">
-          <li><a href="#" @click="navigateTo('/contact_us')">Contact Us</a></li>
+            <li><a href="#" @click="navigateTo('/the_hub')">The Hub</a></li>
+            <li><a href="#" @click="navigateTo('/contact_us')">Contact Us</a></li>
+            <li><a href="#" @click="navigateTo('/account')">Account</a></li>
         </ul>
       </div>
 
       <div class="search-bar">
-        <img src="/icons/Search_Magnifying_Glass.png" alt="Search" class="icon search-icon" />
         <input type="text" v-model="searchQuery" placeholder="e.g. Boston Public Library (Copley)" class="search-input" />
+        <button class="search-button" @click="searchStudySpots">
+            <img src="/icons/Magnifying_Glass.png" alt="Search" class="search-icon" />
+        </button>
       </div>
 
-      <img src="/icons/User_Account.png" alt="Account" class="icon account-icon" @click="goToAccount" />
+      <div class="account-container">
+        <img src="/icons/User_Account.png" alt="Account" style="width: 100px; height: 100px;" @click="goToAccount" />
+      </div>
     </header>
 
     <div class="content-wrapper">
       <aside class="sidebar">
-        <img src="/filters/Filter_Shhh.png" alt="Quiet" class="filter shhh-filter"/>
-        <img src="/filters/Filter_Wifi.png" alt="WiFi" class="filter wifi-filter"/>
-        <img src="/filters/Filter_Charger.png" alt="Outlets" class="filter charger-filter"/>
-        <img src="/filters/Filter_Printer.png" alt="Printing" class="filter printer-filter"/>
-        <img src="/filters/Filter_OpenLate.png" alt="Late Sesh" class="filter openlate-filter"/>
-        <img src="/filters/Filter_WaterBottle.png" alt="H2O Station" class="filter waterbottle-filter"/>
-        <img src="/filters/Filter_Proximity.png" alt="Closeby?" class="filter proximity-filter"/>
+        <div class="filter-item">
+          <img src="/filters/Filter_Shhh.png" alt="Quiet" class="filter-icon"/>
+        </div>
+        <div class="filter-item">
+          <img src="/filters/Filter_Wifi.png" alt="WiFi" class="filter-icon"/>
+        </div>
+        <div class="filter-item">
+          <img src="/filters/Filter_Charger.png" alt="Outlets" class="filter-icon"/>
+        </div>
+        <div class="filter-item">
+          <img src="/filters/Filter_Printer.png" alt="Printing" class="filter-icon"/>
+        </div>
+        <div class="filter-item">
+        <img src="/filters/Filter_Clock.png" alt="Late Sesh" class="filter-icon"/>
+        </div>
+
+        <div class="filter-item">
+          <img src="/filters/Filter_WaterBottle.png" alt="H2O Station" class="filter-icon"/>
+        </div>
+        <div class="filter-item">
+          <img src="/filters/Filter_Proximity.png" alt="Closeby?" class="filter-icon"/>
+        </div>
       </aside>
 
       <main class="main-content">
@@ -35,25 +56,34 @@
             <img
               :src="`/icons/Calendar_${day}.png`"
               :alt="day"
-              class="icon calendar-icon"
-              @click="selectedDay = day"
+              style="width: 60px; height: 60px;"
+              @click="selectDay(day)"
               :class="{ active: selectedDay === day }"
             />
           </div>
         </div>
 
         <div class="listings">
-          <div v-for="listing in filteredListings" :key="listing.id" class="listing-card">
-            <div class="listing-box">
-              <div class="listing-image-placeholder"></div>
+          <div v-for="listing in listings" :key="listing.id" class="listing-card">
+            <router-link
+                :to="{ name: 'reviews', params: { id: listing.id } }"
+                class="listing-box"
+            >
+              <div class="listing-image">
+                <img
+                    src="/images/library_placeholder.jpg"
+                    alt="Library Placeholder"
+                    class="listing-image-placeholder"
+                />
+              </div>
               <div class="listing-info">
                 <h3 class="listing-title">{{ listing.name }}</h3>
-                <p class="listing-address">{{ listing.address }} • {{ listing.hours }}</p>
+                <p class="listing-address">{{ listing.address }}</p>
                 <div class="listing-rating">
-                  <img v-for="star in 5" :key="star" src="/icons/Full_Star.png" alt="Full Star" class="icon star-icon" />
+                  <img v-for="star in 5" :key="star" src="/icons/Full_Star.png" alt="Full Star" style="width: 25px; height: 25px;" />
                 </div>
               </div>
-            </div>
+            </router-link>
           </div>
         </div>
       </main>
@@ -62,23 +92,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 
 const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 const selectedDay = ref('Monday');
 const listings = ref([]);
 
-window.listings=listings;
+window.listings = listings;
 
 const goToAccount = () => {
   window.location.href = "/account";
 };
+
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
 };
+
 const navigateTo = (path) => {
   window.location.href = path;
+};
+
+const selectDay = (day) => {
+  console.log("Selecting day:", day);
+  selectedDay.value = day;
 };
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -108,227 +145,357 @@ const fetchStudySpots = async () => {
   }
 };
 
+const searchStudySpots = async () => {
+  try {
+    const query = searchQuery.value.trim();
+
+    if (!query) {
+      // If search is empty, fall back to all listings
+      fetchStudySpots();
+      return;
+    }
+
+    const response = await fetch(`http://localhost:8000/study_spots/search?q=${encodeURIComponent(query)}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    listings.value = data.map(spot => ({
+      id: spot.id,
+      name: spot.name,
+      address: spot.address,
+      hours: spot.hours,
+    }));
+  } catch (error) {
+    console.error("Error searching study spots:", error);
+  }
+};
+
+
 // Fetch data on page load
 onMounted(fetchStudySpots);
-
-// Ensure listings are displayed correctly
-const filteredListings = computed(() => listings.value);
 </script>
 
 <style scoped>
 @import '@fontsource/rubik-doodle-shadow';
 @import url('https://fonts.googleapis.com/css2?family=Monofett&display=swap');
 
-@font-face {
-  font-family: 'Sansation Light';
-  src: url('@/assets/Sansation_Light.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-img {
-  object-fit: contain; /* ✅ Prevent distortion */
-  display: block;
-}
-
 .container {
   background: #fdfde3;
-  padding: 120px;
-}
-
-.content-wrapper {
-  display: flex;
-}
-
-.main-content {
-  flex-grow: 1;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;  /* ✅ Center listings */
-  overflow: hidden;  /* ✅ Prevent unwanted scrolling */
+  overflow: hidden;
 }
 
+/* Header styles */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  height: 90px;
+  height: 150px;
+  background: #fdfde3;
   position: fixed;
   top: 0;
   left: 0;
-  background: #fdfde3;
-  padding: 32px 2px;
-}
-
-
-
-.dropdown {
-  font-family: 'Sansation Light', serif;
-  font-size: 20px;
-  position: absolute;
-  top: 150px;
   right: 0;
-  border: 1px solid black;
-  background: #fdfde3;
-  padding: 10px 45px;
+  z-index: 100;
 }
 
-.search-bar {
-  width: 1100px;
-  height: 35px;
-  position: absolute;
-  right: 280px;
-  top: 57px;
+.nav-container {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px;
-  border: 2px solid black;
-  border-radius: 25px;
-  background: #f9fdad;
+  align-items: center; /* vertically centers contents */
+  height: 100%;         /* ensures full height of the header */
 }
-
-.listings {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  max-height: calc(100vh - 150px); /* ✅ Use available space */
-  overflow-y: auto;
-  width: 80%; /* ✅ Make it take up more space */
-  align-items: center;
-}
-
-
-.listing-box {
-  border: 2px solid black;
-  border-radius: 25px;
-  padding: 35px; /* ✅ More padding inside */
-  background: #fdfde3;
-  width: 90%;
-  max-width: 900px; /* ✅ Wider for readability */
-  min-height: 220px; /* ✅ More vertical space */
-  font-size: 22px; /* ✅ Increase font size for readability */
-  display: flex;
-  flex-direction: column; /* ✅ Stack elements inside */
-  align-items: flex-start; /* ✅ Align content to left */
-  justify-content: space-between;
-  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2);
-}
-
-
-.listing-title {
-  font-family: 'Monofett', cursive;
-  font-size: 28px; /* ✅ Bigger title */
-  font-weight: bold;
-  color: black;
-  margin-bottom: 8px;
-}
-
-.listing-address {
-  font-family: 'Sansation Light', sans-serif;
-  font-size: 20px; /* ✅ More readable */
-  color: black;
-  margin-bottom: 15px;
-}
-
-
-
-.listing-rating {
-  display: flex;
-  justify-content: flex-start; /* ✅ Align stars to the left */
-  gap: 3px; /* ✅ Reduce spacing between stars */
-}
-
-.sidebar {
-  width: 180px; /* ✅ Make sidebar wider */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 35px; /* ✅ More space between icons */
-}
-
-.search-bar {
-  width: 80%; /* ✅ Matches sidebar width */
-  height: 60px; /* ✅ Taller for visibility */
-  border: 3px solid black;
-  border-radius: 30px;
-  background: #f9fdad;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-}
-
-.search-input {
-  font-size: 22px; /* ✅ Bigger text for easier typing */
-  width: 100%;
-  border: none;
-  outline: none;
-  background: #f9fdad;
-}
-
 
 
 .icon {
-  width: auto; /* ✅ Prevent forced scaling */
-  height: auto;
-  max-width: 100px; /* ✅ Set a reasonable max size */
-  max-height: 100px;
+  width: 220px;
+  height: 170px;
+  margin-top: 0px;
+  cursor: pointer;
 }
 
 .menu-icon {
-  width: 50px;
-  height: 50px;
-}
-
-.star-icon {
-  width: 20px; /* ✅ Reduce star size */
-  height: 20px;
+  width: 180px;
+  height: 180px;
 }
 
 
+.account-container {
+  flex: 0 0 200px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.dropdown {
+  position: absolute;
+  top: 120px;
+  left: 0;
+  border: 1px solid #000;
+  background: #fdfde3;
+  padding: 10px;
+  border-radius: 5px;
+  list-style: none;
+  z-index: 1000;
+}
+
+.dropdown li {
+  padding: 5px 0;
+}
+
+.dropdown a {
+  text-decoration: none;
+  color: #000;
+}
+
+/* Search bar */
+.search-bar {
+  position: relative;
+  width: 700px;
+  height: 45px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  border: 2px solid #000;
+  border-radius: 25px;
+  background: #f9fdad;
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 8px 15px;
+}
 .search-icon {
-  width: 25px;
-  height: 25px;
+  width: 30px;
+  height: 30px;
 }
 
-.account-icon {
-  width: 250px;
-  height: 250px;
+.search-button {
+  background: #f9fdad;
+  border: none;
+  border-left: 1px solid #ccc;
+  padding: 0 15px;
+  height: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
 }
 
-.star-icon {
-  width: 20px;
-  height: 20px;
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  position: fixed;
+  top: 150px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0;
 }
 
-.shhh-filter,
-.wifi-filter,
-.charger-filter,
-.printer-filter,
-.openlate-filter,
-.waterbottle-filter,
-.proximity-filter {
-  width: 80px; /* ✅ Bigger icons */
-  height: 80px;
+/* Sidebar */
+.sidebar {
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  gap: 30px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.filter-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter-icon {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2));
+  transition: transform 0.2s ease;
+}
+
+.filter-icon:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.3));
+}
+
+.filter-icon.active {
+  border: 2px solid #000;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.05);
 }
 
 
-.calendar-icon {
-  width: 60px;
-  height: 60px;
+.main-content {
+  flex: 1;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+.hub-title {
+  font-family: 'Rubik Doodle Shadow', cursive;
+  font-size: 90px;
+  text-align: center;
+  margin: 5px 0 10px 0;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #000;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-transform: uppercase;
+  line-height: 1;
+}
 
 .day-selector {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 8px;
+  margin: 5px 0 15px 0;
+}
+
+.day-item {
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.day-item img.active {
+  border: 3px solid #000;
+  border-radius: 5px;
+  background-color: rgba(0,0,0,0.05);
+}
+
+/* Listings */
+.listings {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.listing-card {
+  width: 100%;
+}
+
+.listing-box {
+  border: 2px solid #000;
+  border-radius: 15px;
+  padding: 15px;
+  background: #fdfde3;
+  display: flex;
   gap: 15px;
-  margin-top: 40px;  /* ✅ Increase margin to push down */
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: auto;
+  margin-bottom: 5px;
+}
+
+.listing-image {
+  flex: 0 0 140px;
+}
+
+.listing-image-placeholder {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
 
+.listing-info {
+  flex: 1;
+  padding: 0 15px;
+}
+
+.listing-title {
+  font-size: 32px;            /* Slightly larger */
+  font-weight: normal;        /* 'bold' is redundant with Monofett's style */
+  letter-spacing: 1px;        /* Adds breathing room between letters */
+  color: #111;                /* Darker text */
+  line-height: 1.2;           /* Better vertical spacing */
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+  font-family: 'Monofett', cursive;
+  text-transform: none;       /* Remove ALL CAPS if it's hurting readability */
+}
+
+
+.listing-address {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.listing-rating {
+  display: flex;
+  gap: 3px;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .search-bar {
+    width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+  }
+
+  .search-bar {
+    order: 3;
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .content-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .listing-box {
+    flex-direction: column;
+  }
+
+  .listing-image {
+    align-self: center;
+  }
+
+  .listing-info {
+    padding-right: 0;
+  }
+}
 </style>

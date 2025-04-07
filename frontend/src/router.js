@@ -8,7 +8,7 @@ import ContactUsPage from '@/components/ContactUsPage.vue';
 const routes = [
   { path: '/', component: HomePage },
   { path: '/account', component: AccountPage },
-  { path: '/reviews', component: ReviewsPagePage },
+  { path: '/reviews/:id', name: 'reviews', component: ReviewsPagePage },
   { path: '/the_hub', component: TheHubPagePage },
   { path: '/contact_us', component: ContactUsPage }
 ];
