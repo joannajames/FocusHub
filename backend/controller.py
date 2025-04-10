@@ -18,23 +18,58 @@ def login(email: str, password: str):
 # Fetch all study spots (Publicly accessible)
 @router.get("/study_spots")
 def get_study_spots(
-    wifi: bool = None,
-    outlets: bool = None,
-    quiet: bool = None,
-    food: bool = None,
-    prayer_space: bool = None,
+    has_outlets: str = None,
+    has_meeting_rooms: str = None,
+    has_food: str = None,
+    has_spacious_seating: str = None,
+    has_printing: str = None,
+    has_prayer_space: str = None,
+    on_campus: str = None,
 ):
-    return {"data": get_all_study_spots(wifi, outlets, quiet, food, prayer_space)}
+    return {"data": get_all_study_spots(has_outlets, has_meeting_rooms, has_food, has_spacious_seating, has_printing, has_prayer_space, on_campus)}
 
 # Add a new study spot (Admin Only)
 @router.post("/study_spots")
-def create_study_spot(name: str, location: str, wifi: bool, outlets: bool, quiet: bool, food: bool, user: dict = Depends(get_current_admin)):
-    return add_study_spot(name, location, wifi, outlets, quiet, food)
+def create_study_spot(
+    spot_name: str,
+    address: str,
+    has_outlets: str,
+    has_meeting_rooms: str,
+    has_food: str,
+    has_spacious_seating: str,
+    has_printing: str,
+    has_prayer_space: str,
+    on_campus: str,
+    default_img_url: str = None,
+    average_rating: float = 0.0,
+    user: dict = Depends(get_current_admin)
+):
+    return add_study_spot(spot_name, address, "TBD", "TBD", has_outlets, has_food,
+                          has_printing, has_prayer_space, has_spacious_seating,
+                          has_meeting_rooms, on_campus, default_img_url, average_rating)
+
 
 # Update a study spot (Admin Only)
 @router.put("/study_spots/{spot_id}")
-def modify_study_spot(spot_id: int, name: str, location: str, wifi: bool, outlets: bool, quiet: bool, food: bool, user: dict = Depends(get_current_admin)):
-    return update_study_spot(spot_id, name, location, wifi, outlets, quiet, food)
+def modify_study_spot(
+    spot_id: int,
+    spot_name: str,
+    address: str,
+    has_outlets: str,
+    has_meeting_rooms: str,
+    has_food: str,
+    has_spacious_seating: str,
+    has_printing: str,
+    has_prayer_space: str,
+    on_campus: str,
+    default_img_url: str = None,
+    average_rating: float = 0.0,
+    user: dict = Depends(get_current_admin)
+):
+    return update_study_spot(spot_id, spot_name, address, "TBD", "TBD", has_outlets, has_food,
+                             has_printing, has_prayer_space, has_spacious_seating,
+                             has_meeting_rooms, on_campus, default_img_url, average_rating)
+
 
 # Delete a study spot (Admin Only)
 @router.delete("/study_spots/{spot_id}")
@@ -43,10 +78,11 @@ def remove_study_spot(spot_id: int, user: dict = Depends(get_current_admin)):
 
 # Submit a review (User only)
 @router.post("/reviews")
-def create_review(spot_id: int, rating: int, comment: str, user: dict = Depends(get_current_user)):
-    return add_review(user["email"], spot_id, rating, comment)
+def create_review(spot_id: int, rating: int, review_content: str, user: dict = Depends(get_current_user)):
+    return add_review(user["user_id"], spot_id, rating, review_content)
 
 # Get reviews for a specific study spot (Public)
 @router.get("/reviews/{spot_id}")
 def read_reviews(spot_id: int):
     return {"data": get_reviews_for_spot(spot_id)}
+
