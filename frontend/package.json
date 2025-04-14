@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@fontsource/rubik-doodle-shadow": "^5.1.1",
+    "@fontsource/rubik-gemstones": "^5.2.5",
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
     "vue-router": "^4.5.0"
