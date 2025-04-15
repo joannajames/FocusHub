@@ -6,10 +6,10 @@
           <img src="/icons/Menu_Burger.png" alt="Menu" class="menu-icon" @click="toggleDropdown"/>
             <ul class="dropdown" v-show="showDropdown">
               <li>
-                <a href="#" @click="navigateTo('/the_hub')">
-                  -&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;Hub
-                  <img src="/icons/Hub_Stars.png" class="dropdown-icon" alt="the Hub Icon" />
-                </a>
+                  <a href="#" @click.prevent="handleProfileClick">
+                    -&nbsp;&nbsp;&nbsp;profile
+                    <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+                  </a>
               </li>
               <li>
                 <a href="#" @click="navigateTo('/profile')">
@@ -60,6 +60,22 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router'
+import { auth } from '@/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { loginWithGoogle } from '@/services/authService'
+
+
+const router = useRouter()
+
+function handleProfileClick() {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      await loginWithGoogle()
+    }
+    router.push('/profile')
+  })
+}
 
 const showDropdown = ref(false);
 
