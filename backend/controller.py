@@ -5,6 +5,13 @@ from datetime import timedelta
 
 router = APIRouter()
 
+
+@router.post("/auth/google")
+def google_login(token: str):
+    user_info = verify_google_token(token)
+    jwt_token = create_access_token(data={"sub": user_info["email"]})
+    return {"access_token": jwt_token, "token_type": "bearer"}
+
 # User Login - Generates JWT Token
 @router.post("/token")
 def login(email: str, password: str):

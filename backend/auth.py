@@ -3,6 +3,21 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
+GOOGLE_CLIENT_ID = "780726687923-hqvono1d8ln6900o0gcdatahjditpqp8.apps.googleusercontent.com"
+
+def verify_google_token(token: str):
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+        email = idinfo['email']
+        return {
+            "email": email,
+            "is_admin": email.endswith("@yourorg.edu")  # Adjust logic as needed
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google token verification failed: {str(e)}")
 
 # Secret key for JWT signing (Change this & store securely)
 SECRET_KEY = "your_secret_key_here"
