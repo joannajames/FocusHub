@@ -196,14 +196,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import '@/assets/global.css';
-import {allListings} from "@/store/favourites";
 const listings = ref([]);
 const showDropdown = ref(false);
 const toggleDropdown = () => (showDropdown.value = !showDropdown.value);
 const navigateTo = (path) => (window.location.href = path);
 const searchQuery = ref('');
 const selectedDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
-const favourites = ref(new Set(JSON.parse(localStorage.getItem('favourites') || '[]')));
 const activeFilters = ref([]);
 const router = useRouter();
 const goToReviews = (id) => {
@@ -229,14 +227,6 @@ const filteredListings = computed(() => {
   });
 });
 
-const toggleFavourite = (id) => {
-  if (favourites.value.has(id)) {
-    favourites.value.delete(id);
-  } else {
-    favourites.value.add(id);
-  }
-  localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
-};
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -269,7 +259,6 @@ onMounted(async () => {
     }));
 
     listings.value = mapped;
-    allListings.value = mapped;
   } catch (err) {
     console.error('Failed to fetch listings:', err);
   }

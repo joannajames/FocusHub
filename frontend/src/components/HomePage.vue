@@ -12,12 +12,6 @@
                   </a>
               </li>
               <li>
-                <a href="#" @click="navigateTo('/profile')">
-                  -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
-                </a>
-              </li>
-              <li>
                 <a href="#" @click="navigateTo('/chat_to_us')">
                   -&nbsp;&nbsp;&nbsp;chat&nbsp;&nbsp;to&nbsp;&nbsp;us
                   <img src="/icons/Chat_To_Us.png" class="dropdown-icon" alt="Chat to Us Icon" />
@@ -32,7 +26,10 @@
             </ul>
           </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')"/>
+          <img src="/icons/Account.png"
+                alt="Profile Icon"
+                class="login-icon"
+                @click="handleProfileClick" />
         </div>
       </header>
 

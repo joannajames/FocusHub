@@ -100,28 +100,7 @@
           <div class="left">
             <div class="card">
               <h3>my favourite spots:</h3>
-              <div
-                v-for="listing in favouriteSpots"
-                :key="listing.id"
-                class="listing-box"
-              >
-                <img :src="`/images/${listing.default_img_url}`"
-                   :alt="listing.image"
-                   class="image"
-                />
-                <div class="listing-content">
-                  <h3 class="listing-title">{{ listing.name }}</h3>
-                  <p class="listing-address">{{ listing.address }}</p>
-                  <div class="listing-tags">
-                    <span
-                      v-for="(tag, i) in listing.attributes"
-                      :key="i"
-                      :class="['tag', tag.color]"
-                    >
-                      {{ tag.name }}
-                    </span>
-                  </div>
-                </div>
+              <div>
               </div>
             </div>
 
@@ -143,7 +122,6 @@
 
 <script setup>
 import {ref, watch} from 'vue';
-import { favouriteListings } from '@/store/favourites';
 import '@/assets/global.css';
 import {attributeTags, tagColors} from "@/constants/Tags";
 
@@ -152,7 +130,6 @@ const showForm = ref(false);
 const selectedTags = ref(JSON.parse(localStorage.getItem('selectedTags') || '[]'));
 const studyPreferences = attributeTags;
 const tagClasses = tagColors;
-const favouriteSpots = favouriteListings;
 
 watch(selectedTags, (newVal) => {
   localStorage.setItem('selectedTags', JSON.stringify(newVal));
