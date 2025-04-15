@@ -1,0 +1,268 @@
+/* ---------- global.css ----------
+
+- Centralised location for shared styles, fonts, layout rules, resets, and elements that appear across multiple pages.
+- Avoids style repetition across components.
+- Makes layout, font, and behaviour consistent site-wide. */
+
+/* Borders (typically commented out):
+
+- Useful for development and debugging layout/positioning.
+- Uncomment when needed to visually verify box dimensions or placements. */
+
+/* ---------- Font Definitions ---------- */
+
+/* Rubik Doodle Shadow: Used consistently for page titles and dropdown headers. */
+
+@font-face {
+  font-family: 'Rubik Doodle Shadow';
+  src: url('@/assets/fonts/Rubik_Doodle_Shadow.ttf') format('truetype');
+}
+
+/* Rubik One: Used for listing titles. */
+
+@font-face {
+  font-family: 'Rubik One';
+  src: url('@/assets/fonts/Rubik_One.ttf') format('truetype');
+}
+
+/* Rubik Gemstones (Not yet implemented): Intended for course numbers. */
+
+/*@font-face {
+  font-family: 'Rubik Gemstones';
+  src: url('@/assets/fonts/Rubik_Gemstones.ttf') format('truetype');
+}*/
+
+/* Sansation Regular: Default font for tag text and general body content. */
+
+@font-face {
+  font-family: 'Sansation Regular';
+  src: url('@/assets/fonts/Sansation_Regular.ttf') format('truetype');
+}
+
+/* Sansation Light: Used for listing addresses, opening times, and example inputs. */
+
+@font-face {
+  font-family: 'Sansation Light';
+  src: url('@/assets/fonts/Sansation_Light.ttf') format('truetype');
+}
+
+/* Sansation Bold: Used for clickable or selected elements. */
+
+@font-face {
+  font-family: 'Sansation Bold';
+  src: url('@/assets/fonts/Sansation_Bold.ttf') format('truetype');
+}
+
+/* Victor Mono: Used for error messages and validation feedback. */
+
+@font-face {
+  font-family: 'Victor Mono';
+  src: url('@/assets/fonts/Victor_Mono.ttf') format('truetype');
+}
+
+/* ---------- Global Reset ----------
+
+- To remove inconsistent default styles applied by different browsers (e.g. margin, padding).
+- Ensures you start from a clean slate for layout and design. */
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Sansation Light', serif;
+  background: #fdfde3;
+  box-sizing: border-box;
+}
+
+/* ---------- Layout ---------- */
+
+/* Background: Fixed value for all pages to ensure visual consistency. */
+
+/* Dropdown: Should appear on every page. */
+
+/* Menu icon: Standardised to a hamburger icon (≡) for easy recognition and space-saving. */
+
+/* Left Margin: Consistent left margin ensures all main content is aligned regardless of the page. */
+
+/* Submit Icon: Submit action icon to be reused across all forms (pop-up or otherwise). */
+
+.page-frame {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #fdfde3;
+  /*border: 2px dashed navy;*/
+}
+
+.container {
+  margin-top: 45px;
+  font-family: 'Sansation Light', serif;
+  background: inherit;
+  /*border: 2px dashed black;*/
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  padding: 25px 30px 10px 10px;
+  background: #fdfde3;
+  /*border: 2px dashed red;*/
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  /*border: 2px dashed chartreuse;*/
+}
+
+.nav-container {
+  position: relative;
+  width: fit-content;
+  /*border: 2px dashed orange;*/
+}
+
+.dropdown {
+  position: absolute;
+  width: 320px;
+  top: 90px;
+  left: 40px;
+  padding: 0;
+  font-family: 'Rubik Doodle Shadow', serif;
+  font-size: 22px;
+  background: #f9fdad;
+  overflow: hidden;
+  list-style: none;
+  border: 2px solid black;
+  border-radius: 18px;
+}
+
+.dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+.dropdown li {
+  padding: 15px 20px;
+  border-bottom: 1px solid black;
+}
+
+.dropdown li:last-child {
+  border-bottom: none;
+}
+
+.dropdown-icon {
+  width: 47px;
+  height: 50px;
+}
+
+.menu-icon {
+  width: 110px;
+  height: auto;
+  padding: 0;
+  margin-top: 3px;
+  margin-left: 15px;
+  cursor: pointer;
+  /*border: 2px dashed purple;*/
+}
+
+.nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-right: 20px;
+  /*border: 2px dashed deeppink;*/
+}
+
+.login-icon {
+  width: 90px;
+  height: 90px;
+  cursor: pointer;
+  margin-left: 85px;
+  /*border: 2px dashed orange;*/
+}
+
+.logo-icon {
+  width: 155px;
+  height: 90px;
+  margin-right: 20px;
+  cursor: pointer;
+  /*border: 2px dashed blue;*/
+}
+
+.left-margin {
+  margin-left: 220px;
+  border-left: 2px grey;
+}
+
+.title {
+  width: 100%;
+  margin-bottom: 10px;
+  font-family: 'Rubik Doodle Shadow', serif;
+  font-size: 110px;
+}
+
+.main-content {
+  padding: 30px 0 0 0;
+  margin-right: 20px;
+  /*border: 2px dashed purple;*/
+}
+
+.submit-icon-wrapper {
+  position: absolute;
+  padding: 0;
+  top: 20px;
+  right: 20px;
+  margin: 0;
+}
+
+.submit-icon {
+  width: 60px;
+  height: auto;
+  cursor: pointer;
+}
+
+/* Tag System:
+
+Tags.js stores and organises all tag-related logic and values.
+
+We have two types of tags.
+
+1) AttributeTags:
+
+   - Set on the UserProfile page (user study preferences)
+   - Submitted via DynamicReviews pop-up (qualities of a specific study space)
+   - Appear in the listing boxes on DynamicReviews and TheHub
+
+2) ContactTags:
+
+   - Used when users contact FocusHub to categorise their query.  */
+
+/* ---------- Tag Colours ---------- */
+.pink   { background: #ffbbbc; }
+.orange { background: #ffcdae; }
+.yellow { background: #f9fdad; }
+.green  { background: #c5f3af; }
+.blue   { background: #badafb; }
+
+/* ---------- Tag Style ---------- */
+.tag {
+  height: 17px;
+  padding: 5px 13px;
+  font-family: 'Sansation Regular', serif;
+  font-style: normal;
+  font-size: 14px;
+  border: 1.5px solid black;
+  border-radius: 18px;
+  user-select: none;
+}
