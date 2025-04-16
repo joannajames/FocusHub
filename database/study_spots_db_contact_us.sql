@@ -16,36 +16,30 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `users`
+-- Table structure for table `contact_us`
 --
 
-DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `contact_us`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `user_id` int NOT NULL AUTO_INCREMENT,
-  `bu_user_id` varchar(255) NOT NULL,
-  `user_name` varchar(255) NOT NULL,
-  `profile_img_url` varchar(500) DEFAULT NULL,
-  `personal_tags` text,
-  `courses` text,
-  `bu_college` enum('CAS','COM','ENG','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') NOT NULL,
-  `degree` varchar(255) DEFAULT NULL,
-  `academic_level` enum('Undergrad','Grad','PhD') DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `last_login` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`),
-  UNIQUE KEY `bu_user_id` (`bu_user_id`)
+CREATE TABLE `contact_us` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `subject` enum('Add Study Spot','Remove Spot','Inaccurate Info','Report Bug','Feedback','Partnerships') DEFAULT NULL,
+  `message` text,
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `users`
+-- Dumping data for table `contact_us`
 --
 
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+LOCK TABLES `contact_us` WRITE;
+/*!40000 ALTER TABLE `contact_us` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contact_us` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

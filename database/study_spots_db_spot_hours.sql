@@ -1,13 +1,13 @@
--- MySQL dump 10.13  Distrib 9.0.1, for macos14 (arm64)
+-- MySQL dump 10.13  Distrib 8.0.38, for macos14 (x86_64)
 --
--- Host: localhost    Database: study_spots_db
+-- Host: 127.0.0.1    Database: study_spots_db
 -- ------------------------------------------------------
 -- Server version	9.0.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
+/*!50503 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -16,22 +16,24 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Dumping data for table `contact_us`
+-- Table structure for table `spot_hours`
 --
 
-LOCK TABLES `contact_us` WRITE;
-/*!40000 ALTER TABLE `contact_us` DISABLE KEYS */;
-/*!40000 ALTER TABLE `contact_us` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `reviews`
---
-
-LOCK TABLES `reviews` WRITE;
-/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
-UNLOCK TABLES;
+DROP TABLE IF EXISTS `spot_hours`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `spot_hours` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `spot_id` int DEFAULT NULL,
+  `day_of_week` tinyint DEFAULT NULL,
+  `open_time` time DEFAULT NULL,
+  `close_time` time DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `spot_id` (`spot_id`),
+  CONSTRAINT `spot_hours_ibfk_1` FOREIGN KEY (`spot_id`) REFERENCES `spots` (`spot_id`),
+  CONSTRAINT `spot_hours_chk_1` CHECK ((`day_of_week` between 0 and 6))
+) ENGINE=InnoDB AUTO_INCREMENT=171 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `spot_hours`
@@ -41,25 +43,6 @@ LOCK TABLES `spot_hours` WRITE;
 /*!40000 ALTER TABLE `spot_hours` DISABLE KEYS */;
 INSERT INTO `spot_hours` VALUES (1,NULL,0,'10:00:00','23:59:00'),(2,NULL,1,'00:00:00','02:00:00'),(3,NULL,1,'07:00:00','23:59:00'),(4,NULL,2,'07:00:00','23:59:00'),(5,NULL,3,'07:00:00','23:59:00'),(6,NULL,4,'07:00:00','23:59:00'),(7,NULL,2,'00:00:00','02:00:00'),(8,NULL,3,'00:00:00','02:00:00'),(9,NULL,4,'00:00:00','02:00:00'),(10,NULL,5,'00:00:00','02:00:00'),(11,NULL,5,'07:00:00','23:00:00'),(12,NULL,6,'10:00:00','23:00:00'),(13,NULL,0,'10:00:00','23:59:00'),(14,NULL,1,'00:00:00','02:00:00'),(15,NULL,1,'07:00:00','23:59:00'),(16,NULL,2,'07:00:00','23:59:00'),(17,NULL,3,'07:00:00','23:59:00'),(18,NULL,4,'07:00:00','23:59:00'),(19,NULL,2,'00:00:00','02:00:00'),(20,NULL,3,'00:00:00','02:00:00'),(21,NULL,4,'00:00:00','02:00:00'),(22,NULL,5,'00:00:00','02:00:00'),(23,NULL,5,'07:00:00','23:00:00'),(24,NULL,6,'10:00:00','23:00:00'),(25,7,1,'07:00:00','21:00:00'),(26,7,2,'07:00:00','21:00:00'),(27,7,3,'07:00:00','21:00:00'),(28,7,4,'07:00:00','21:00:00'),(32,7,5,'07:00:00','20:00:00'),(33,7,6,'08:00:00','20:00:00'),(34,7,0,'08:00:00','21:00:00'),(35,8,1,'06:00:00','20:30:00'),(36,8,2,'06:00:00','20:30:00'),(37,8,3,'06:00:00','20:30:00'),(38,8,4,'06:00:00','20:30:00'),(39,8,5,'06:00:00','20:30:00'),(42,8,6,'06:00:00','19:30:00'),(43,8,0,'06:00:00','19:30:00'),(45,9,1,'06:30:00','19:00:00'),(46,9,2,'06:30:00','19:00:00'),(47,9,3,'06:30:00','19:00:00'),(48,9,4,'06:30:00','19:00:00'),(49,9,5,'06:30:00','19:00:00'),(52,9,6,'07:00:00','19:00:00'),(53,9,0,'07:00:00','19:00:00'),(55,10,0,'07:30:00','21:00:00'),(56,10,1,'07:30:00','21:00:00'),(57,10,2,'07:30:00','21:00:00'),(58,10,3,'07:30:00','21:00:00'),(59,10,4,'07:30:00','21:00:00'),(60,10,5,'07:30:00','21:00:00'),(61,10,6,'07:30:00','21:00:00'),(62,11,1,'09:00:00','21:00:00'),(63,11,2,'09:00:00','21:00:00'),(64,11,3,'09:00:00','21:00:00'),(65,11,4,'09:00:00','21:00:00'),(69,11,5,'09:00:00','19:00:00'),(70,11,6,'12:00:00','17:00:00'),(71,11,0,'12:00:00','17:00:00'),(73,12,1,'10:00:00','20:00:00'),(74,12,2,'10:00:00','20:00:00'),(75,12,3,'10:00:00','20:00:00'),(76,12,4,'10:00:00','20:00:00'),(80,12,5,'10:00:00','18:30:00'),(81,13,1,'08:00:00','17:00:00'),(82,13,2,'08:00:00','17:00:00'),(83,13,3,'08:00:00','17:00:00'),(84,13,4,'08:00:00','17:00:00'),(85,13,5,'08:00:00','17:00:00'),(88,13,0,'08:00:00','17:00:00'),(89,14,0,'06:00:00','00:00:00'),(90,14,1,'06:00:00','00:00:00'),(91,14,2,'06:00:00','00:00:00'),(92,14,3,'06:00:00','00:00:00'),(93,14,4,'06:00:00','00:00:00'),(94,14,5,'06:00:00','00:00:00'),(95,14,6,'06:00:00','00:00:00'),(96,15,1,'06:00:00','23:00:00'),(97,15,2,'06:00:00','23:00:00'),(98,15,3,'06:00:00','23:00:00'),(99,15,4,'06:00:00','23:00:00'),(103,15,5,'06:00:00','22:00:00'),(104,15,6,'08:00:00','22:00:00'),(105,15,0,'08:00:00','22:00:00'),(107,16,0,'09:00:00','21:00:00'),(108,16,1,'09:00:00','21:00:00'),(109,16,2,'09:00:00','21:00:00'),(110,16,3,'09:00:00','21:00:00'),(111,16,4,'09:00:00','21:00:00'),(114,16,6,'09:00:00','21:30:00'),(115,16,5,'09:00:00','21:30:00'),(117,17,0,'07:00:00','20:00:00'),(118,17,1,'07:00:00','20:00:00'),(119,17,2,'07:00:00','20:00:00'),(120,17,3,'07:00:00','20:00:00'),(121,17,4,'07:00:00','20:00:00'),(122,17,5,'07:00:00','20:00:00'),(123,17,6,'07:00:00','20:00:00'),(124,18,0,'07:00:00','18:00:00'),(125,18,1,'07:00:00','18:00:00'),(126,18,2,'07:00:00','18:00:00'),(127,18,3,'07:00:00','18:00:00'),(128,18,4,'07:00:00','18:00:00'),(129,18,5,'07:00:00','18:00:00'),(130,18,6,'07:00:00','18:00:00'),(131,19,1,'07:00:00','20:00:00'),(132,19,2,'07:00:00','20:00:00'),(133,19,3,'07:00:00','20:00:00'),(134,19,4,'07:00:00','20:00:00'),(135,19,5,'07:00:00','20:00:00'),(136,19,6,'07:00:00','20:00:00'),(138,19,0,'08:00:00','19:00:00'),(139,20,1,'04:30:00','22:00:00'),(140,20,2,'04:30:00','22:00:00'),(141,20,3,'04:30:00','22:00:00'),(142,20,4,'04:30:00','22:00:00'),(143,20,5,'04:30:00','22:00:00'),(146,20,6,'05:30:00','21:00:00'),(147,20,0,'05:30:00','19:30:00'),(148,21,0,'07:00:00','18:00:00'),(149,21,1,'07:00:00','18:00:00'),(150,21,2,'07:00:00','18:00:00'),(151,21,3,'07:00:00','18:00:00'),(152,21,4,'07:00:00','18:00:00'),(153,21,5,'07:00:00','18:00:00'),(154,21,6,'07:00:00','18:00:00'),(155,22,1,'08:00:00','17:00:00'),(156,22,0,'08:00:00','17:00:00'),(158,22,2,'08:00:00','20:00:00'),(159,22,3,'08:00:00','20:00:00'),(160,22,4,'08:00:00','20:00:00'),(161,22,6,'09:30:00','20:00:00'),(162,22,5,'09:30:00','20:00:00'),(164,23,0,'12:00:00','18:00:00'),(165,23,1,'12:00:00','18:00:00'),(166,23,2,'12:00:00','18:00:00'),(167,23,3,'12:00:00','18:00:00'),(168,23,4,'12:00:00','18:00:00'),(169,23,5,'12:00:00','18:00:00'),(170,23,6,'12:00:00','18:00:00');
 /*!40000 ALTER TABLE `spot_hours` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `spots`
---
-
-LOCK TABLES `spots` WRITE;
-/*!40000 ALTER TABLE `spots` DISABLE KEYS */;
-INSERT INTO `spots` VALUES (1,'Mugar Library Floors 1-3','771 Commonwealth Ave, Boston, MA 02215',NULL,NULL,NULL,'Yes','No',NULL,NULL,0.00,'Yes','Yes','Yes'),(2,'Mugar Library Floors 4-5','771 Commonwealth Ave, Boston, MA 02215',NULL,NULL,NULL,'Yes','No',NULL,NULL,0.00,'Yes','No','Yes'),(3,'Pavement Coffee','736 Commonwealth Ave, Brookline, MA 02446',NULL,NULL,NULL,'Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(4,'CDS Building First Floor','665 Commonwealth Ave, Boston, MA 02215',NULL,NULL,NULL,'Yes','Yes',NULL,NULL,0.00,'Yes','No','Yes'),(5,'CDS Building Third Floor','665 Commonwealth Ave, Boston, MA 02215',NULL,NULL,NULL,'Yes','No',NULL,NULL,0.00,'Yes','No','Yes'),(6,'CDS Building Fifth Floor','665 Commonwealth Ave, Boston, MA 02215',NULL,NULL,NULL,'Yes','Yes',NULL,NULL,0.00,'Yes','Yes','Yes'),(7,'Starbucks East End','700 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'Starbucks_1.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(8,'Starbucks West End','874 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'Starbucks_2.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(9,'Caffe Nero','1047 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'Nero_1.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(10,'Life Alive Cafe','888 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'Life_Alive.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(11,'Howard Thurman Center','808 Commonwealth Ave, Brookline, MA 02446',NULL,NULL,'Howard.png','Yes','No',NULL,NULL,0.00,'Yes','No','Yes'),(12,'LGBTQIA+ Student Center','808 Commonwealth Ave, Brookline, MA 02446',NULL,NULL,'LGBTQIA.png','Yes','No',NULL,NULL,0.00,'No','No','Yes'),(13,'Innovate@BU','730 Commonwealth Ave, Brookline, MA 02446',NULL,NULL,'Innovate.png','Yes','No',NULL,NULL,0.00,'Yes','No','Yes'),(14,'GSU','775 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'GSU.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','Yes'),(15,'BU Fitness & Recreation Center','915 Commonwealth Ave, Boston, MA 02215',NULL,NULL,'Fitrec.png','Yes','Yes',NULL,NULL,0.00,'No','No','Yes'),(16,'Cafe Landwer','900 Beacon St, Boston, MA 02215',NULL,NULL,'Landwer.png','Yes','Yes',NULL,NULL,0.00,'No','No','No'),(17,'Tatte Bakery & Cafe','1003 Beacon St, Brookline, MA 02446',NULL,NULL,'Tatte_1.png','Yes','Yes',NULL,NULL,0.00,'No','No','No'),(18,'Pavement Coffee Fenway','1334 Boylston St, Boston, MA 02215',NULL,NULL,'Pavement_2.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(19,'Tatte Bakery & Cafe Fenway','1352 Boylston St, Boston, MA 02215',NULL,NULL,'Tatte_2.png','Yes','Yes',NULL,NULL,0.00,'No','No','No'),(20,'Starbucks Fenway','142-148 Brookline Ave, Boston, MA 02215',NULL,NULL,'Starbucks_3.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(21,'Caffe Nero Fenway','1375 Boylston St, Boston, MA 02215',NULL,NULL,'Nero_2.png','Yes','Yes',NULL,NULL,0.00,'Yes','No','No'),(22,'Phinista','96 Peterborough St, Boston, MA 02215',NULL,NULL,'Phinista.png','Yes','Yes',NULL,NULL,0.00,'No','No','No'),(23,'The Sipping Room','132 Jersey St, Boston, MA 02215',NULL,NULL,'Sipping_Room.png','Yes','Yes',NULL,NULL,0.00,'No','No','No');
-/*!40000 ALTER TABLE `spots` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `users`
---
-
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -71,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-16 19:05:24
+-- Dump completed on 2025-04-16 18:50:14
