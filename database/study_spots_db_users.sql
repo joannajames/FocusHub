@@ -26,7 +26,7 @@ CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
   `bu_user_id` varchar(255) NOT NULL,
   `user_name` varchar(255) NOT NULL,
-  `profile_img_url` varchar(500) DEFAULT NULL,
+  `user_img` varchar(500) DEFAULT NULL,
   `personal_tags` text,
   `courses` text,
   `bu_college` enum('CAS','COM','ENG','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') NOT NULL,
@@ -34,6 +34,8 @@ CREATE TABLE `users` (
   `academic_level` enum('Undergrad','Grad','PhD') DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `admin_access` tinyint(1) DEFAULT '0',
+  `admin_role` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `bu_user_id` (`bu_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -57,4 +59,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-16 18:50:14
+-- Dump completed on 2025-04-19 14:39:20
