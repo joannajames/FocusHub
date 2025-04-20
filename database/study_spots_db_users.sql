@@ -29,16 +29,16 @@ CREATE TABLE `users` (
   `user_img` varchar(500) DEFAULT NULL,
   `personal_tags` text,
   `courses` text,
-  `bu_college` enum('CAS','COM','ENG','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') NOT NULL,
+  `bu_college` enum('CAS','COM','ENG','MET','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') DEFAULT NULL,
   `degree` varchar(255) DEFAULT NULL,
   `academic_level` enum('Undergrad','Grad','PhD') DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `admin_access` tinyint(1) DEFAULT '0',
+  `admin_access` tinyint DEFAULT NULL,
   `admin_role` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `bu_user_id` (`bu_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,6 +47,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'jojames@bu.edu','jojames',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Backend Developer'),(2,'cmphilip@bu.edu','cmphilip','christal.jpeg','Aesthetic, H2O Stations, Indie (Non-Chain), Low Traffic, Smiley Service','CS673, CS662','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Database Manager'),(3,'zara87@bu.edu','zara87',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Security Specialist'),(4,'rdhoda@bu.edu','rdhodha',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Frontend Developer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -59,4 +60,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-19 14:39:20
+-- Dump completed on 2025-04-20 16:33:09

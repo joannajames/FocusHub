@@ -47,7 +47,7 @@ CREATE TABLE `hours` (
   `day` enum('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') NOT NULL,
   `opens` time NOT NULL,
   `closes` time NOT NULL,
-  `closes_next_day` tinyint(1) DEFAULT '0',
+  `closes_next_day` tinyint DEFAULT NULL,
   PRIMARY KEY (`spot_id`,`day`),
   CONSTRAINT `hours_ibfk_1` FOREIGN KEY (`spot_id`) REFERENCES `spots` (`spot_id`),
   CONSTRAINT `hours_chk_1` CHECK ((`day` in (_utf8mb4'Sunday',_utf8mb4'Monday',_utf8mb4'Tuesday',_utf8mb4'Wednesday',_utf8mb4'Thursday',_utf8mb4'Friday',_utf8mb4'Saturday')))
@@ -66,7 +66,7 @@ CREATE TABLE `reviews` (
   `user_id` int NOT NULL,
   `spot_id` int NOT NULL,
   `review_content` text NOT NULL,
-  `rating` tinyint DEFAULT NULL,
+  `rating` decimal(3,1) DEFAULT NULL,
   `review_img` varchar(500) DEFAULT NULL,
   `review_tags` varchar(255) DEFAULT NULL,
   `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +76,7 @@ CREATE TABLE `reviews` (
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`spot_id`) REFERENCES `spots` (`spot_id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_chk_1` CHECK ((`rating` between 1 and 5))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,14 +91,14 @@ CREATE TABLE `spots` (
   `spot_name` varchar(255) DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
   `default_img` varchar(500) DEFAULT NULL,
-  `has_outlets` enum('Yes','No') DEFAULT NULL,
-  `has_food` enum('Yes','No') DEFAULT NULL,
-  `has_printing` enum('Yes','No') DEFAULT NULL,
-  `has_prayer_space` enum('Yes','No') DEFAULT NULL,
-  `avg_rating` decimal(3,2) DEFAULT NULL,
-  `has_spacious_seating` enum('Yes','No') DEFAULT NULL,
-  `has_meeting_rooms` enum('Yes','No') DEFAULT NULL,
-  `on_campus` enum('Yes','No') DEFAULT NULL,
+  `has_outlets` tinyint DEFAULT NULL,
+  `has_food` tinyint DEFAULT NULL,
+  `has_printing` tinyint DEFAULT NULL,
+  `has_prayer_space` tinyint DEFAULT NULL,
+  `avg_rating` decimal(3,1) DEFAULT NULL,
+  `has_spacious_seating` tinyint DEFAULT NULL,
+  `has_meeting_rooms` tinyint DEFAULT NULL,
+  `on_campus` tinyint DEFAULT NULL,
   PRIMARY KEY (`spot_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -117,16 +117,16 @@ CREATE TABLE `users` (
   `user_img` varchar(500) DEFAULT NULL,
   `personal_tags` text,
   `courses` text,
-  `bu_college` enum('CAS','COM','ENG','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') NOT NULL,
+  `bu_college` enum('CAS','COM','ENG','MET','CFA','CGS','SAR','CDS','SHA','Pardee','Questrom','Kilachand','Wheelock') DEFAULT NULL,
   `degree` varchar(255) DEFAULT NULL,
   `academic_level` enum('Undergrad','Grad','PhD') DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `admin_access` tinyint(1) DEFAULT '0',
+  `admin_access` tinyint DEFAULT NULL,
   `admin_role` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `bu_user_id` (`bu_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -138,4 +138,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-19 14:40:58
+-- Dump completed on 2025-04-20 16:38:34
