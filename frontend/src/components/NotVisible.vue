@@ -12,9 +12,9 @@
                 </a>
               </li>
               <li>
-                <a href="#" @click="navigateTo('/profile')">
+                <a href="#" @click="goToProfile">
                   -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+                  <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
                 </a>
               </li>
               <li>
@@ -32,7 +32,8 @@
             </ul>
           </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')" />
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon" class="login-icon" @click="handleProfileClick"/>
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
@@ -56,7 +57,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import '@/assets/global.css';
+import {ref, watch} from 'vue';
+import { loginWithGoogle } from '@/services/authService';
+import { useAuthStatus } from '@/store/authStatus';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import router from "@/router";
+
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
+
+const goToProfile = () => {
+  showDropdown.value = false;
+  router.push(isLoggedIn.value ? '/profile' : '/unavailable');
+};
 
 const showDropdown = ref(false);
 
@@ -68,6 +82,24 @@ const navigateTo = (path) => {
   window.location.href = path;
   showDropdown.value = false;
 };
+
+function handleProfileClick() {
+  if (isLoggedIn.value) {
+    signOut(auth).then(() => {
+      setLoggedIn(false); // Updates both ref + localStorage
+    });
+  } else {
+    loginWithGoogle().then(() => {
+      setLoggedIn(true);
+    });
+  }
+}
+
+watch(isLoggedIn, (newVal) => {
+  if (newVal) {
+    router.push('/profile');
+  }
+});
 </script>
 
 <style scoped>
@@ -77,7 +109,7 @@ p {
   line-height: 0.9;
   word-spacing: 4px;
   letter-spacing: 1px;
-  font-family: 'Victor Mono Variable', serif;
+  font-family: 'Victor Mono', serif;
 }
 
 </style>

@@ -12,9 +12,9 @@
                 </a>
               </li>
               <li>
-                <a href="#" @click="navigateTo('/profile')">
+                <a href="#" @click="goToProfile">
                   -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+                  <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
                 </a>
               </li>
               <li>
@@ -32,7 +32,8 @@
             </ul>
           </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')" />
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon" class="login-icon" @click="handleProfileClick"/>
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
@@ -89,6 +90,18 @@
 import '@/assets/global.css';
 import {ref} from "vue";
 
+import { loginWithGoogle } from '@/services/authService';
+import { useAuthStatus } from '@/store/authStatus';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import router from "@/router";
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
+
+const goToProfile = () => {
+  showDropdown.value = false;
+  router.push(isLoggedIn.value ? '/profile' : '/unavailable');
+};
+
 const showDropdown = ref(false);
 
 const toggleDropdown = () => {
@@ -99,6 +112,18 @@ const navigateTo = (path) => {
   window.location.href = path;
   showDropdown.value = false; // hide after click
 };
+
+function handleProfileClick() {
+  if (isLoggedIn.value) {
+    signOut(auth).then(() => {
+      setLoggedIn(false); // Updates both ref + localStorage
+    });
+  } else {
+    loginWithGoogle().then(() => {
+      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    });
+  }
+}
 
 </script>
 

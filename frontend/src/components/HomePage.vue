@@ -6,15 +6,15 @@
           <img src="/icons/Menu_Burger.png" alt="Menu" class="menu-icon" @click="toggleDropdown"/>
             <ul class="dropdown" v-show="showDropdown">
               <li>
-                  <a href="#" @click.prevent="handleProfileClick">
-                    -&nbsp;&nbsp;&nbsp;profile
-                    <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
-                  </a>
+                <a href="#" @click="navigateTo('/the_hub')">
+                  -&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;Hub
+                  <img src="/icons/Hub_Stars.png" class="dropdown-icon" alt="the Hub Icon" />
+                </a>
               </li>
               <li>
-                <a href="#" @click="navigateTo('/profile')">
+                <a href="#" @click="goToProfile">
                   -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+                  <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
                 </a>
               </li>
               <li>
@@ -32,7 +32,8 @@
             </ul>
           </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')"/>
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon" class="login-icon" @click="handleProfileClick"/>
         </div>
       </header>
 
@@ -60,22 +61,12 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'
-import { auth } from '@/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
-import { loginWithGoogle } from '@/services/authService'
-
-
-const router = useRouter()
-
-function handleProfileClick() {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      await loginWithGoogle()
-    }
-    router.push('/profile')
-  })
-}
+import { loginWithGoogle } from '@/services/authService';
+import { useAuthStatus } from '@/store/authStatus';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import router from "@/router";
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
 
 const showDropdown = ref(false);
 
@@ -87,6 +78,24 @@ const navigateTo = (path) => {
   window.location.href = path;
   showDropdown.value = false;
 };
+
+const goToProfile = () => {
+  showDropdown.value = false;
+  router.push(isLoggedIn.value ? '/profile' : '/unavailable');
+};
+
+function handleProfileClick() {
+  if (isLoggedIn.value) {
+    signOut(auth).then(() => {
+      setLoggedIn(false); // Updates both ref + localStorage
+    });
+  } else {
+    loginWithGoogle().then(() => {
+      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    });
+  }
+}
+
 </script>
 
 <style>

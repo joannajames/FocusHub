@@ -12,9 +12,9 @@
                 </a>
               </li>
               <li>
-                <a href="#" @click="navigateTo('/profile')">
+                <a href="#" @click="goToProfile">
                   -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+                  <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
                 </a>
               </li>
               <li>
@@ -32,51 +32,52 @@
             </ul>
           </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')" />
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon" class="login-icon" @click="handleProfileClick"/>
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
 
-      <div class="main-content">
-        <h1 class="title">chat to us</h1>
+              <div class="main-content">
+                <h1 class="title">chat to us</h1>
 
-        <div class="form-wrapper">
-          <form class="contact-form">
-            <div class="submit-icon-wrapper">
-              <img src="/icons/Send.png" alt="Submit" class="submit-icon" @click="submitForm" />
-            </div>
+                <div class="form-wrapper">
+                  <form class="contact-form">
+                    <div class="submit-icon-wrapper">
+                      <img src="/icons/Send.png" alt="Submit" class="submit-icon" @click="submitForm" />
+                    </div>
 
-            <div class="field">
-              <label for="name">name:</label>
-              <input id="name" type="text" placeholder="  . . . . . . . . . . . . . . ." />
-            </div>
+                    <div class="field">
+                      <label for="name">name:</label>
+                      <input id="name" type="text" placeholder="  . . . . . . . . . . . . . . ." />
+                    </div>
 
-            <div class="field">
-              <label for="email">email:</label>
-              <input id="email" type="email" placeholder="  . . . . . . . . . . . . . . ." />
-            </div>
+                    <div class="field">
+                      <label for="email">email:</label>
+                      <input id="email" type="email" placeholder="  . . . . . . . . . . . . . . ." />
+                    </div>
 
-            <div class="field">
-              <label>subject:</label>
-              <div class="tags">
-                <span
-                  v-for="tag in queryOptions"
-                  :key="tag"
-                  :class="{ tag: true, active: selectedTag === tag, [tagClasses[tag]]: true }"
-                  @click="selectedTag = tag"
-                >
-                  {{ tag }}
-                </span>
+                    <div class="field">
+                      <label>subject:</label>
+                    <div class="tags">
+                      <span
+                        v-for="tag in queryOptions"
+                        :key="tag"
+                        :class="{ tag: true, active: selectedTag === tag, [tagClasses[tag]]: true }"
+                        @click="selectedTag = tag"
+                      >
+                        {{ tag }}
+                      </span>
+                    </div>
+                  </div>
+
+                    <div class="field">
+                      <label for="message">your message:</label>
+                      <textarea id="message" placeholder="  . . . . . . . . . . . . . . ."></textarea>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </div>
-
-            <div class="field">
-              <label for="message">your message:</label>
-              <textarea id="message" placeholder="  . . . . . . . . . . . . . . ."></textarea>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -85,6 +86,13 @@
 import { ref } from 'vue';
 import { contactTags, tagColors } from '@/constants/Tags';
 import '@/assets/global.css';
+
+import { loginWithGoogle } from '@/services/authService';
+import { useAuthStatus } from '@/store/authStatus';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import router from "@/router";
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
 
 const showDropdown = ref(false);
 
@@ -95,6 +103,11 @@ const toggleDropdown = () => {
 const navigateTo = (path) => {
   window.location.href = path;
   showDropdown.value = false; // hide after click
+};
+
+const goToProfile = () => {
+  showDropdown.value = false;
+  router.push(isLoggedIn.value ? '/profile' : '/unavailable');
 };
 
 const selectedTag = ref('');
@@ -110,19 +123,34 @@ const submitForm = () => {
   const tag = selectedTag.value || 'General';
 
   const subject = encodeURIComponent(tag);
-  const body = encodeURIComponent(`Ciao FocusHub,\n\n${message}\n\n\nThank you,\n\n${name}\n${email}`);
-  window.location.href = `mailto:info@focushub.com?subject=${subject}&body=${body}`;
+  const body = encodeURIComponent(`Hi FocusHub,\n\n${message}\n\n\nThank you,\n\n${name}\n${email}`);
+  window.location.href = `mailto:hi.focushub@gmail.com?subject=${subject}&body=${body}`;
 };
+
+function handleProfileClick() {
+  if (isLoggedIn.value) {
+    signOut(auth).then(() => {
+      setLoggedIn(false); // Updates both ref + localStorage
+    });
+  } else {
+    loginWithGoogle().then(() => {
+      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    });
+  }
+}
+
 </script>
 
 <style scoped>
+
 .title {
   text-align: center;
 }
 
 .form-wrapper {
+  position: relative;
   display: flex;
-  justify-content: center; /* center horizontally */
+  justify-content: center; /* centre horizontally */
   align-items: center;
   margin-top: 25px;
 }
