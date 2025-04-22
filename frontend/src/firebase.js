@@ -20,3 +20,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 logEvent(analytics, "notification_received");
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+export { auth, provider };
