@@ -29,6 +29,13 @@ export const contactTags = [
   'partnerships',
 ];
 
+// Flag Form Tags — used in DynamicReviews.vue
+export const flagTags = [
+  'explicit content',
+  'privacy violation',
+  'inaccurate info',
+];
+
 // Combined tag-colour mapping
 export const tagColors = {
   'aesthetic': 'pink',
@@ -55,7 +62,11 @@ export const tagColors = {
   'remove a spot': 'pink',
   'report bug': 'orange',
   'partnerships': 'green',
+
+  'explicit content': 'orange',
+  'privacy violation': 'pink',
+  'inaccurate info': 'green',
 };
 
 // Export a combined list
-export const allTags = [...attributeTags, ...contactTags];
+export const allTags = [...attributeTags, ...contactTags, ...flagTags];
