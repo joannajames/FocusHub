@@ -276,7 +276,7 @@ const listing = ref();
 
 const fetchListings = async () => {
   try {
-    const res = await fetch('http://127.0.0.1:8000/spots');
+    const res = await fetch('http://127.0.0.1:8090/study_spots');
     const rawData = await res.json();
     const spots = rawData.data || [];
 
@@ -303,8 +303,27 @@ const fetchListings = async () => {
   }
 };
 
+
+const fetchReviews = async () => {
+  try {
+    const res = await fetch(`http://127.0.0.1:8090/reviews/${spotId}`);
+    const data = await res.json();
+    reviews.value = data.data.map((r) => ({
+      id: r.review_id,
+      message: r.review_content,
+      rating: r.rating,
+      image: `/images/${r.review_img_url || 'Placeholder.png'}`,
+      tags: r.review_tags ? r.review_tags.split(',').map(tag => tag.trim()) : [],
+      date: r.timestamp
+    }));
+  } catch (err) {
+    console.error("Failed to fetch reviews:", err);
+  }
+};
+
 onMounted(() => {
   fetchListings();
+  fetchReviews();
 });
 
 const goToProfile = () => {

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from database import get_db_connection
 
 GOOGLE_CLIENT_ID = "780726687923-hqvono1d8ln6900o0gcdatahjditpqp8.apps.googleusercontent.com"
 
@@ -41,19 +42,47 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 # Function to authenticate user (Replace with database authentication)
 def authenticate_user(email: str, password: str):
-    user = fake_users_db.get(email)
-    if not user or user["password"] != password:
-        return None
-    return {"email": email, "is_admin": user["is_admin"]}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
+        query = """
+            SELECT user_id, bu_user_id, admin_access
+            FROM users
+            WHERE bu_user_id = %s
+        """
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
+
+        if user is None:
+            return None
+
+        # Password checking logic (add this if storing hashed passwords)
+        # For now, we assume identity provider handles password security
+
+        return {
+            "email": email,
+            "user_id": user["user_id"],
+            "is_admin": bool(user["admin_access"])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="DB error")
+    finally:
+        cursor.close()
+        conn.close()
 # Function to verify JWT token
 def get_current_user(token: str = Security(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        user_id: int = payload.get("user_id")
+        if email is None or user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"email": email, "is_admin": fake_users_db.get(email, {}).get("is_admin", False)}
+        return {
+            "email": email,
+            "user_id": user_id,
+            "is_admin": fake_users_db.get(email, {}).get("is_admin", False)  # Optional until you migrate admin logic
+        }
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 

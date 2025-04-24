@@ -32,3 +32,4 @@ async def root():
 @app.get("/protected")
 async def protected_route(user: dict = Depends(get_current_user)):
     return {"message": f"Welcome, {user['email']}"}
+

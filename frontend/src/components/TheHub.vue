@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue';
+import {ref, onMounted, computed, watch} from 'vue';
 import { useRouter } from 'vue-router';
 import '@/assets/global.css';
 import { allListings } from '@/store/favourites';
@@ -147,30 +147,76 @@ const toggleFavourite = (id) => {
 
 const weekdayToIndex = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
 
-onMounted(() => {
+const dayChanged = computed(() => selectedDay.value);
+const fetchStudySpots = () => {
   const dayIndex = weekdayToIndex[selectedDay.value];
-  fetch(`http://127.0.0.1:8000/spots/day/${dayIndex}`)
-    .then(res => res.json())
+  console.log(`Fetching spots for day: ${selectedDay.value} (index: ${dayIndex})`);
+  listings.value = [];
+  fetch(`http://127.0.0.1:8090/study_spots/day/${dayIndex}`)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      return res.json();
+    })
     .then(rawData => {
-      const mapped = rawData.data.map((spot) => ({
-        id: spot.spot_id,
-        name: spot.spot_name,
-        address: spot.address,
-        rating: parseFloat(spot.avg_rating) || 0,
-        default_img_url: spot.default_img,
-        opening_hours: `${String(spot.open_time).slice(0, 5)}–${String(spot.close_time).slice(0, 5)}`,
-        has_outlets: spot.has_outlets === 'Yes',
-        has_food: spot.has_food === 'Yes',
-        has_printing: spot.has_printing === 'Yes',
-        has_prayer_space: spot.has_prayer_space === 'Yes',
-        has_spacious_seating: spot.has_spacious_seating === 'Yes',
-        has_meeting_rooms: spot.has_meeting_rooms === 'Yes',
-        on_campus: spot.on_campus === 'Yes',
-      }));
+      console.log('API Response:', rawData);
+
+      if (!rawData.data || !Array.isArray(rawData.data) || rawData.data.length === 0) {
+        console.warn('No study spots data returned or empty array');
+        return;
+      }
+
+      const mapped = rawData.data.map((spot) => {
+        console.log('Raw spot data:', spot);
+
+        let imgUrl = 'default.jpg';
+        if (spot.default_img_url) imgUrl = spot.default_img_url;
+        else if (spot.default_img) imgUrl = spot.default_img;
+
+        let rating = 0;
+        if (spot.average_rating) rating = parseFloat(spot.average_rating);
+        else if (spot.avg_rating) rating = parseFloat(spot.avg_rating);
+
+        let hours = 'Hours unavailable';
+        if (spot.open_time && spot.close_time) {
+          let openTime = String(spot.open_time).slice(0, 5);
+          let closeTime = String(spot.close_time).slice(0, 5);
+          hours = `${openTime}–${closeTime}`;
+        }
+
+        return {
+          id: spot.spot_id,
+          name: spot.spot_name,
+          address: spot.address || 'Address unavailable',
+          rating: rating,
+          default_img_url: imgUrl,
+          opening_hours: hours,
+          has_outlets: spot.has_outlets === 'Yes',
+          has_food: spot.has_food === 'Yes',
+          has_printing: spot.has_printing === 'Yes',
+          has_prayer_space: spot.has_prayer_space === 'Yes',
+          has_spacious_seating: spot.has_spacious_seating === 'Yes',
+          has_meeting_rooms: spot.has_meeting_rooms === 'Yes',
+          on_campus: spot.on_campus === 'Yes',
+        };
+      });
+
+      console.log(`Successfully mapped ${mapped.length} listings:`, mapped);
       listings.value = mapped;
       allListings.value = mapped;
     })
-    .catch(err => console.error('Initial listings fetch failed:', err));
+    .catch(err => {
+      console.error('Error fetching study spots:', err);
+    });
+};
+
+watch(dayChanged, () => {
+  fetchStudySpots();
+});
+
+onMounted(() => {
+  fetchStudySpots();
 });
 
 const getStarIcons = (rating) => {
