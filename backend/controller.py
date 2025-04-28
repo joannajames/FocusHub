@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.logger import logger
-
+from pydantic import BaseModel
 from auth import get_current_user, get_current_admin, create_access_token, authenticate_user, verify_google_token
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
-    get_reviews_for_spot
+    get_reviews_for_spot, get_top_tags_per_spot, check_user_review
 from datetime import timedelta
 from fastapi import Path
 
@@ -42,7 +42,10 @@ def get_study_spots(
 ):
     return {"data": get_all_study_spots(has_outlets, has_meeting_rooms, has_food, has_spacious_seating, has_printing, has_prayer_space, on_campus)}
 
-
+@router.get("/study_spots/top_tags")
+def fetch_top_tags():
+    tags = get_top_tags_per_spot()
+    return {"data": dict(tags)}
 @router.get("/study_spots/day/{day_index}")
 def route_study_spots_open_on_day(
         day_index: int = Path(ge=0, le=6),
@@ -77,6 +80,7 @@ def route_study_spots_open_on_day(
 
     return {"data": results}
 # Add a new study spot (Admin Only)
+# Add a new study spot (Admin Only)
 @router.post("/study_spots")
 def create_study_spot(
     spot_name: str,
@@ -88,13 +92,13 @@ def create_study_spot(
     has_printing: str,
     has_prayer_space: str,
     on_campus: str,
-    default_img_url: str = None,
-    average_rating: float = 0.0,
+    default_img: str = None,
+    avg_rating: float = 0.0,
     user: dict = Depends(get_current_admin)
 ):
-    return add_study_spot(spot_name, address, "TBD", "TBD", has_outlets, has_food,
+    return add_study_spot(spot_name, address, has_outlets, has_food,
                           has_printing, has_prayer_space, has_spacious_seating,
-                          has_meeting_rooms, on_campus, default_img_url, average_rating)
+                          has_meeting_rooms, on_campus, default_img, avg_rating)
 
 
 # Update a study spot (Admin Only)
@@ -110,13 +114,13 @@ def modify_study_spot(
     has_printing: str,
     has_prayer_space: str,
     on_campus: str,
-    default_img_url: str = None,
-    average_rating: float = 0.0,
+    default_img: str = None,
+    avg_rating: float = 0.0,
     user: dict = Depends(get_current_admin)
 ):
-    return update_study_spot(spot_id, spot_name, address, "TBD", "TBD", has_outlets, has_food,
+    return update_study_spot(spot_id, spot_name, address, has_outlets, has_food,
                              has_printing, has_prayer_space, has_spacious_seating,
-                             has_meeting_rooms, on_campus, default_img_url, average_rating)
+                             has_meeting_rooms, on_campus, default_img, avg_rating)
 
 
 # Delete a study spot (Admin Only)
@@ -133,3 +137,10 @@ def create_review(spot_id: int, rating: int, review_content: str, user: dict = D
 @router.get("/reviews/{spot_id}")
 def read_reviews(spot_id: int):
     return {"data": get_reviews_for_spot(spot_id)}
+
+@router.get("/reviews/{spot_id}/user/{user_id}")
+def check_if_user_reviewed(spot_id: int, user_id: int):
+    if check_user_review(user_id, spot_id):
+        return {"message": "Review exists"}
+    else:
+        raise HTTPException(status_code=404, detail="No review found")

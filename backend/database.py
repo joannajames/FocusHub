@@ -1,10 +1,15 @@
 import mysql.connector
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="focushub_user",
-        password="SQLPassCod3!",
-        database="study_spots_db",
-        auth_plugin = 'mysql_native_password'
+    connection = mysql.connector.connect(
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        unix_socket=os.getenv("DB_HOST"),
+        database=os.getenv("DB_NAME")
     )
+    return connection
+

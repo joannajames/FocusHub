@@ -181,20 +181,68 @@ def delete_study_spot(spot_id):
         conn.close()
         
 # Add a new review       
-def add_review(user_id, spot_id, rating, review_content):
+def add_review(user_id, spot_id, rating, review_content, review_tags, review_img_url):
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         query = """
-            INSERT INTO reviews (user_id, spot_id, rating, review_content)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO reviews (user_id, spot_id, rating, review_content, review_tags, review_img_url)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (user_id, spot_id, rating, review_content))
+        values = (user_id, spot_id, rating, review_content, review_tags, review_img_url)
+        cursor.execute(query, values)
         conn.commit()
         return {"message": "Review submitted successfully"}
     except Exception as e:
         logger.error(f"Error adding review: {e}")
         raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+def get_top_tags_per_spot(limit=3):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT spot_id, LOWER(TRIM(tag)) AS tag, COUNT(*) AS count
+            FROM (
+                SELECT spot_id, SUBSTRING_INDEX(SUBSTRING_INDEX(review_tags, ',', numbers.n), ',', -1) AS tag
+                FROM reviews
+                JOIN (
+                    SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+                    UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
+                ) numbers
+                ON CHAR_LENGTH(review_tags)
+                   -CHAR_LENGTH(REPLACE(review_tags, ',', '')) >= numbers.n - 1
+            ) AS split_tags
+            WHERE tag IS NOT NULL AND tag <> ''
+            GROUP BY spot_id, tag
+            ORDER BY spot_id, count DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        # Aggregate top unique tags per spot
+        from collections import defaultdict
+        tag_dict = defaultdict(list)
+        seen_tags = defaultdict(set)
+
+        for row in rows:
+            spot_id = row['spot_id']
+            tag = row['tag']
+            if len(tag_dict[spot_id]) < limit and tag not in seen_tags[spot_id]:
+                tag_dict[spot_id].append(tag)
+                seen_tags[spot_id].add(tag)
+
+        return tag_dict
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -233,3 +281,22 @@ def get_reviews_for_spot(spot_id):
         if conn:
             conn.close()
 
+def check_user_review(user_id, spot_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT 1
+            FROM reviews
+            WHERE user_id = %s AND spot_id = %s
+            LIMIT 1
+        """
+        cursor.execute(query, (user_id, spot_id))
+        result = cursor.fetchone()
+        return result is not None
+    except Exception as e:
+        logger.error(f"Error checking if user has reviewed: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        cursor.close()
+        conn.close()
