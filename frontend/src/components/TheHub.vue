@@ -1,43 +1,66 @@
 <template>
   <div class="page-frame">
     <div class="container">
-      <!-- Header Section -->
       <header class="header">
         <div class="nav-container">
-          <img src="/icons/Menu_Burger.png" alt="Menu" class="menu-icon" @click="toggleDropdown" />
-            <ul class="dropdown" v-show="showDropdown">
+          <img src="/icons/Menu_Burger.png"
+               alt="Menu"
+               class="menu-icon"
+               @click="toggleDropdown" />
+            <ul class="dropdown"
+                v-show="showDropdown">
               <li>
-                <a href="#" @click="navigateTo('/the_hub')">
+                <a href="#"
+                   @click="navigateTo('/the_hub')">
                   -&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;Hub
-                  <img src="/icons/Hub_Stars.png" class="dropdown-icon" alt="the Hub Icon" />
+                  <img src="/icons/Hub_Stars.png"
+                       class="dropdown-icon"
+                       alt="the Hub Icon" />
                 </a>
               </li>
               <li>
                 <a href="#" @click="goToProfile">
                   -&nbsp;&nbsp;&nbsp;profile
-                  <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
+                  <img src="/icons/Account_Signed_Out.png"
+                       class="dropdown-icon"
+                       alt="Profile Icon" />
                 </a>
               </li>
               <li>
                 <a href="#" @click="navigateTo('/chat_to_us')">
                   -&nbsp;&nbsp;&nbsp;chat&nbsp;&nbsp;to&nbsp;&nbsp;us
-                  <img src="/icons/Chat_To_Us.png" class="dropdown-icon" alt="Chat to Us Icon" />
+                  <img src="/icons/Chat_To_Us.png"
+                       class="dropdown-icon"
+                       alt="Chat to Us Icon" />
                 </a>
               </li>
               <li>
                 <a href="#" @click="navigateTo('/our_constitution')">
                   -&nbsp;&nbsp;&nbsp;our&nbsp;&nbsp;constitution
-                  <img src="/icons/Scroll.png" class="dropdown-icon" alt="Constitution Icon" />
+                  <img src="/icons/Scroll.png"
+                       class="dropdown-icon"
+                       alt="Constitution Icon" />
                 </a>
               </li>
             </ul>
         </div>
         <div class="nav-section">
-          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'" alt="Profile Icon" class="login-icon" @click="handleProfileClick" />
-          <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon"
+               class="login-icon"
+               @click="handleProfileClick" />
+          <img src="/icons/FocusHub_Logo.png"
+               alt="FocusHub Logo"
+               class="logo-icon"
+               @click="navigateTo('/')" />
           <div class="search-bar">
-            <input type="text" v-model="searchQuery" placeholder="e.g. Life Alive Cafe" class="search-input" />
-            <img src="/icons/Magnifying_Glass.png" alt="Search" class="search-icon" />
+            <input type="text"
+                   v-model="searchQuery"
+                   placeholder="e.g. Life Alive Cafe"
+                   class="search-input" />
+            <img src="/icons/Magnifying_Glass.png"
+                 alt="Search"
+                 class="search-icon" />
           </div>
         </div>
       </header>
@@ -45,8 +68,14 @@
       <!-- Sidebar Filters -->
       <div class="fixed-left-column">
         <aside class="sidebar">
-          <div class="tooltip-wrapper" v-for="filter in filterOptions" :key="filter.key">
-            <img :src="filter.icon" :alt="filter.label" class="filter" :class="{ active: activeFilters.includes(filter.key) }" @click="toggleFilter(filter.key)" />
+          <div class="tooltip-wrapper"
+               v-for="filter in filterOptions"
+               :key="filter.key">
+            <img :src="filter.icon"
+                 :alt="filter.label"
+                 class="filter"
+                 :class="{ active: activeFilters?.includes(filter.key) }"
+                 @click="toggleFilter(filter.key)" />
             <span class="custom-tooltip">{{ filter.label }}</span>
           </div>
         </aside>
@@ -58,29 +87,45 @@
           <h1 class="title">the Hub</h1>
           <div class="day-selector">
             <div v-for="(day, index) in days" :key="index" class="day-item">
-              <img :src="`/icons/Calendar_${day}.png`" :alt="day" class="calendar-icon" @click="selectedDay = day" :class="{ active: selectedDay === day }" />
+              <img :src="`/icons/Calendar_${day}.png`"
+                   :alt="day"
+                   class="calendar-icon"
+                   @click="selectedDay = day"
+                   :class="{ active: selectedDay === day }" />
             </div>
           </div>
 
           <div class="listing-box" v-for="listing in filteredListings" :key="listing.id">
             <div class="listing-image-wrapper">
-              <img :src="`/images/${listing.default_img_url}`" alt="listing image" class="listing-image" />
+              <img :src="'/images/' + listing.default_img" alt="listing image" class="listing-image" />
             </div>
             <div class="listing-content-wrapper">
               <div class="listing-header">
                 <p class="listing-title" @click="goToReviews(listing.id)">{{ listing.name }}</p>
-                <img :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'" alt="Favourite" class="favourite-icon" @click="toggleFavourite(listing.id)" />
+                <img :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
+                     alt="Favourite"
+                     class="favourite-icon"
+                     @click="toggleFavourite(listing.id)" />
               </div>
-              <p class="listing-address">{{ listing.address }} • {{ listing.opening_hours }}</p>
+              <p class="listing-address">
+                {{ listing.address }} • {{ formatOpeningHours(listing, selectedDay) }}
+              </p>
               <div class="listing-footer-wrapper">
                 <div class="listing-tags">
-                  <span class="tag pink">courtyard</span>
-                  <span class="tag blue">student dealz</span>
-                  <span class="tag orange">quiet</span>
-                  <span class="tag green">car parking</span>
+                  <span
+                      v-for="tag in (listing.tags || []).slice().sort((a, b) => a.localeCompare(b))"
+                      :key="tag"
+                      class="tag"
+                      :class="tagColors[tag]"
+                  >
+                    {{ tag }}
+                  </span>
                 </div>
                 <div class="listing-rating">
-                  <img v-for="(icon, i) in getStarIcons(listing.rating)" :key="i" :src="icon" class="star-icon" alt="rating star" />
+                  <img v-for="(icon, i) in getStarIcons(listing.rating)"
+                       :key="i" :src="icon"
+                       class="star-icon"
+                       alt="rating star" />
                 </div>
               </div>
             </div>
@@ -95,34 +140,32 @@
 import {ref, onMounted, computed} from 'vue';
 import { useRouter } from 'vue-router';
 import '@/assets/global.css';
-import { allListings } from '@/store/favourites';
+import { tagColors } from '@/constants/Tags.js';
 import { loginWithGoogle } from '@/services/authService';
 import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
-const filteredListings = computed(() => {
-  return listings.value.filter((listing) => {
-    const nameMatches = listing.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const filterMatches =
-      activeFilters.value.length === 0 ||
-      activeFilters.value.every((filter) => listing[filter] !== undefined && listing[filter]);
-
-    return nameMatches && filterMatches;
-  });
-});
-
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
-const listings = ref([]);
+const router = useRouter();
+const goToReviews = (id) => router.push(`/reviews/${id}`);
+const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
+function handleProfileClick() {
+  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
+}
+
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+const selectedDay = ref(currentDay.value); // default today, but user can change it
+
+const navigateTo = (path) => (window.location.href = path);
 const showDropdown = ref(false);
 const toggleDropdown = () => (showDropdown.value = !showDropdown.value);
-const navigateTo = (path) => (window.location.href = path);
+
 const searchQuery = ref('');
-const selectedDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 const favourites = ref(new Set(JSON.parse(localStorage.getItem('favourites') || '[]')));
-const activeFilters = ref([]);
-const router = useRouter();
+const topTagsPerSpot = ref({});
 
 const filterOptions = [
   { key: 'has_outlets', icon: '/filters/Filter_Outlet.png', label: 'Outlets?' },
@@ -133,9 +176,8 @@ const filterOptions = [
   { key: 'has_spacious_seating', icon: '/filters/Filter_Capacity.png', label: "Plenty'a Space?" },
   { key: 'has_meeting_rooms', icon: '/filters/Filter_Meeting.png', label: 'Meetings?' },
 ];
+const activeFilters = ref([]);
 
-const goToReviews = (id) => router.push(`/reviews/${id}`);
-const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
 const toggleFilter = (filterKey) => {
   const index = activeFilters.value.indexOf(filterKey);
   index > -1 ? activeFilters.value.splice(index, 1) : activeFilters.value.push(filterKey);
@@ -145,32 +187,87 @@ const toggleFavourite = (id) => {
   localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
 };
 
-const weekdayToIndex = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+function secondsToHHMM(seconds) {
+  const date = new Date(seconds * 1000);
+  return date.toISOString().substring(11, 16); // "HH:MM"
+}
 
-onMounted(() => {
-  const dayIndex = weekdayToIndex[selectedDay.value];
-  fetch(`http://127.0.0.1:8000/spots/day/${dayIndex}`)
-    .then(res => res.json())
-    .then(rawData => {
-      const mapped = rawData.data.map((spot) => ({
-        id: spot.spot_id,
-        name: spot.spot_name,
-        address: spot.address,
-        rating: parseFloat(spot.avg_rating) || 0,
-        default_img_url: spot.default_img,
-        opening_hours: `${String(spot.open_time).slice(0, 5)}–${String(spot.close_time).slice(0, 5)}`,
-        has_outlets: spot.has_outlets === 'Yes',
-        has_food: spot.has_food === 'Yes',
-        has_printing: spot.has_printing === 'Yes',
-        has_prayer_space: spot.has_prayer_space === 'Yes',
-        has_spacious_seating: spot.has_spacious_seating === 'Yes',
-        has_meeting_rooms: spot.has_meeting_rooms === 'Yes',
-        on_campus: spot.on_campus === 'Yes',
-      }));
-      listings.value = mapped;
-      allListings.value = mapped;
+function formatOpeningHours(listing, selectedDay) {
+  const hours = listing.hours?.[selectedDay];
+  if (!hours) return 'Closed';
+  return `${hours.opens}-${hours.closes}`;
+}
+
+onMounted(async () => {
+  try {
+    const spotsRes = await fetch('http://127.0.0.1:8000/study_spots');
+    const spotsData = await spotsRes.json();
+
+    // Group spots and hours
+    const spotMap = {};
+
+    for (const row of spotsData.data) {
+      const spot_id = row.spot_id;
+
+      if (!spotMap[spot_id]) {
+        spotMap[spot_id] = {
+          id: spot_id,
+          name: row.spot_name,
+          address: row.address,
+          default_img: row.default_img,
+          rating: parseFloat(row.avg_rating) || 0,
+          has_outlets: row.has_outlets === 1 || row.has_outlets === "Yes",
+          has_food: row.has_food === 1 || row.has_food === "Yes",
+          has_printing: row.has_printing === 1 || row.has_printing === "Yes",
+          has_prayer_space: row.has_prayer_space === 1 || row.has_prayer_space === "Yes",
+          has_spacious_seating: row.has_spacious_seating === 1 || row.has_spacious_seating === "Yes",
+          has_meeting_rooms: row.has_meeting_rooms === 1 || row.has_meeting_rooms === "Yes",
+          on_campus: row.on_campus === 1 || row.on_campus === "Yes",
+          hours: {}
+        };
+      }
+
+      // Add each day's hours
+      if (row.day !== null) {
+        spotMap[spot_id].hours[row.day] = {
+          opens: secondsToHHMM(row.opens),
+          closes: secondsToHHMM(row.closes),
+        };
+      }
+    }
+
+    // Convert the grouped spots into a list
+    allListings.value = Object.values(spotMap);
+
+    fetch('http://127.0.0.1:8000/study_spots/top_tags')
+      .then(res => res.json())
+      .then(data => {
+        topTagsPerSpot.value = data.data;
+        allListings.value = allListings.value.map(listing => ({
+          ...listing,
+          tags: topTagsPerSpot.value[listing.id] || []
+        }));
+      });
+
+  } catch (err) {
+    console.error("Data fetch failed:", err);
+  }
+});
+
+const allListings = ref([]);
+const filteredListings = computed(() => {
+  return allListings.value
+    .filter((spot) => {
+      const dayHours = spot.hours[selectedDay.value];
+      return dayHours && dayHours.opens !== '00:00:00' && dayHours.closes !== '00:00:00';
     })
-    .catch(err => console.error('Initial listings fetch failed:', err));
+    .filter((listing) => {
+      const nameMatches = listing.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
+      const filterMatches =
+        activeFilters.value.length === 0 ||
+        activeFilters.value.every((filter) => listing[filter]);
+      return nameMatches && filterMatches;
+    });
 });
 
 const getStarIcons = (rating) => {
@@ -184,9 +281,6 @@ const getStarIcons = (rating) => {
   ];
 };
 
-function handleProfileClick() {
-  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
-}
 </script>
 
 <style>
@@ -390,8 +484,8 @@ function handleProfileClick() {
 
 .star-icon {
   object-fit: contain;
-  width: 45px;
-  height: 45px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   margin: 0 2px;
   cursor: auto;
