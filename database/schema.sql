@@ -36,6 +36,46 @@ CREATE TABLE `contact_us` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `favorites`
+--
+
+DROP TABLE IF EXISTS `favorites`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `favorites` (
+  `favorite_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `review_id` int NOT NULL,
+  PRIMARY KEY (`favorite_id`),
+  KEY `user_id` (`user_id`),
+  KEY `review_id` (`review_id`),
+  CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`review_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `flags`
+--
+
+DROP TABLE IF EXISTS `flags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flags` (
+  `flag_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `review_id` int NOT NULL,
+  `flag_tag` enum('explicit content','privacy violation','inaccurate info') NOT NULL,
+  `flagged_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`flag_id`),
+  KEY `user_id` (`user_id`),
+  KEY `review_id` (`review_id`),
+  CONSTRAINT `flags_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `flags_ibfk_2` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`review_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `hours`
 --
 
@@ -138,4 +178,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-20 16:38:34
+-- Dump completed on 2025-04-28 15:22:48
