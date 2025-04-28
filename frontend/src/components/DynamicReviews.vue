@@ -62,9 +62,19 @@
               alt="Plus"
               class="plus-icon"
               :class="{ rotated: isPlusRotated }"
-              @click="toggleForm"
+              @click="checkIfCanSubmit"
             />
           </h1>
+          <div v-if="showLoginPopup" class="login-popup">
+            <div class="popup-content">
+              Error: login with your BU email to access this feature
+            </div>
+          </div>
+          <div v-if="alreadyReviewedPopup" class="already-reviewed-popup">
+            <div class="popup-content">
+              Error: you’ve already posted a review for this spot
+            </div>
+          </div>
 
           <div v-if="showForm" class="form-popup">
             <form class="attributes-form" @submit.prevent>
@@ -72,7 +82,6 @@
                 <img src="/icons/Send.png"
                      alt="Submit"
                      class="submit-icon"
-                     :class="{ rotated: isPlusRotated }"
                      @click="submitForm" />
               </div>
 
@@ -80,7 +89,7 @@
                 <span class="pop-up-listing-title">{{ listing.name }}</span>
                 <br>
                 <br>
-                <span class="pop-up-user-name">Anastasia</span>
+                <span class="pop-up-user-name">{{ username }}</span>
                 <div class="stars">
                   <div
                     v-for="i in 5"
@@ -119,7 +128,7 @@
 
                 <div v-if="showPreferenceCard" class="preferences-card">
                   <div class="preferences-header">
-                    <div class="tag-grid">
+                    <div class="pop-up-tag-grid">
                       <span v-for="tag in spotPreferences"
                             :key="tag" :class="['tag', tagClasses[tag], { active: tempSelectedReviewTags.includes(tag) } ]"
                             @click="toggleTempTag(tag)">
@@ -149,15 +158,13 @@
 
           <div v-if="listing" class="listing-box" :key="listing.id">
             <div class="listing-image-wrapper">
-              <img :src="`/images/${listing.default_img_url}`"
+              <img :src="`/images/${listing.default_img}`"
                    :alt="listing.image"
                     class="listing-image" />
             </div>
               <div class="listing-content-wrapper">
                 <div class="listing-header">
-                  <p class="listing-title">
-                    {{ listing.name }}
-                  </p>
+                  <p class="listing-title">{{ listing.name }}</p>
                   <img
                     :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
                     alt="Favourite"
@@ -165,18 +172,21 @@
                     @click="toggleFavourite(listing.id)"
                   />
                 </div>
-                <p class="listing-address">{{ listing.address }} • {{ selectedDay}}</p>
+                <p class="listing-address">{{ listing.address }} • {{ formatOpeningHours(listing, currentDay) }}</p>
                 <div class="listing-footer-wrapper">
                   <div class="listing-tags">
-                    <span class="tag pink">courtyard</span>
-                    <span class="tag blue">student dealz</span>
-                    <span class="tag orange">quiet</span>
-                    <span class="tag green">car parking</span>
+                    <span
+                        v-for="tag in (Array.isArray(listing.tags) ? listing.tags : []).sort((a, b) => a.localeCompare(b))"
+                        :key="tag"
+                        class="tag"
+                        :class="tagColors[tag]"
+                    >
+                      {{ tag }}
+                    </span>
                   </div>
                   <div class="listing-rating">
-                    <img v-for="(i) in getStarIcons(listing.rating)"
-                       :key="i"
-                       src="/icons/Star.png"
+                    <img v-for="(icon, i) in getStarIcons(listing.rating)"
+                       :key="i" :src="icon"
                        class="star-icon"
                        alt="rating star" />
                   </div>
@@ -185,45 +195,49 @@
           </div>
 
           <div class="reviews-section">
-            <div v-for="(review, i) in reviews" :key="i" class="review-card">
-              <div class="listing-image-wrapper">
-                <img :src="review.image"
-                     alt="Review Image"
-                     class="review-image" />
+            <div v-for="review in reviews" :key="review.id" class="review-card">
+              <div :class="['listing-image-wrapper', { 'has-image': review.image }]" v-if="review.image">
+                <img :src="review.image" alt="Review Image" class="review-image" />
               </div>
-                <div class="listing-content-wrapper">
-                  <div class="listing-header">
-                    <p class="user-name" style="grid-area: name">Anastasia</p>
-                    <div class="review-stars">
-                      <img v-for="(icon, j) in getStarIcons(review.rating)"
-                           :key="j"
-                           :src="icon"
-                           alt="Star"
-                           class="star-icon" />
-                    </div>
-                    <p class="date">({{ formatTimeAgo(review.date) }})</p>
-                    <img :src="flags.has(review.id) ? '/icons/Full_Flag.png' : '/icons/Flag.png'"
-                         alt="Flag Post"
-                         class="flag-icon"
-                         @click="() => { toggleFlag(review.id); toggleFlagPopup(); }"
+
+              <div class="review-left">
+                <div class="listing-header">
+                  <div class="user-info">
+                    <p class="review-user-name">{{ review.userName }}</p>
+                  <p class="review-degree-info">{{ review.academicLevel }} • {{ review.college }} • {{ review.degree }}</p>
+                  </div>
+                  <div class="review-stars">
+                    <img v-for="(icon, j) in getStarIcons(review.rating)"
+                         :key="j"
+                         :src="icon"
+                         alt="Star"
+                         class="star-icon"
                     />
                   </div>
-                    <p class="user-degree"
-                       style="grid-area: degree">Undergraduate • College of Arts & Sciences  • Sociology
-                    </p>
-                    <div class="tags-vertical">
-                      <span v-for="(tag, j) in review.tags"
-                            :key="j"
-                            :class="['tag', tagClasses[tag]]">
-                        {{ tag }}
-                      </span>
-                    </div>
-                    <p class="message" style="grid-area: message">{{ review.message }}</p>
                 </div>
+                <div class="review-content-wrapper">
+                  <p class="review-content">{{ review.content }}</p>
+                </div>
+              </div>
+
+              <div class="review-right">
+                <div class="flag-date-wrapper">
+                  <p class="review-date">({{ formatTimeAgo(review.timestamp) }})</p>
+                  <img :src="flags.has(review.id) ? '/icons/Full_Flag.png' : '/icons/Flag.png'"
+                       alt="Flag Post"
+                       class="flag-icon"
+                       @click="() => { toggleFlag(review.id); toggleFlagPopup(); }" />
+                </div>
+                <div class="review-tags">
+                  <span v-for="(tag, j) in review.tags" :key="j" :class="['tag', tagClasses[tag]]">
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-           <div v-if="showFlagPopup" class="form-popup">
+           <div v-if="showFlagPopup" class="flag-popup">
              <form class="attributes-form" @submit.prevent>
               <div class="submit-icon-wrapper">
                 <img src="/icons/Send.png"
@@ -232,7 +246,7 @@
                      @click="submitFlagForm"/>
               </div>
               <div class="field">
-                <span class="pop-up-user-name">post by: Anastasia</span>
+                <span class="pop-up-user-name">{{ username }}</span>
               </div>
                     <div class="tags">
                       <span
@@ -267,45 +281,104 @@ import { signOut} from "firebase/auth";
 import {auth} from "@/firebase";
 import {loginWithGoogle} from "@/services/authService";
 import {useAuthStatus} from "@/store/authStatus";
+import { onAuthStateChanged } from 'firebase/auth';
 
+const username = ref('Name');
 const selectedTag = ref('');
 const flagOptions = flagTags;
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 import router from "@/router";
 const listing = ref();
+const topTagsPerSpot = ref({});
 
-const fetchListings = async () => {
+function secondsToHHMM(seconds) {
+  const date = new Date(seconds * 1000);
+  return date.toISOString().substring(11, 16); // "HH:MM"
+}
+
+onMounted(async () => {
+  const storedUsername = localStorage.getItem('username');
+  if (storedUsername) {
+    username.value = storedUsername;
+  }
+
+  const storedUserId = localStorage.getItem('userId');
+  if (storedUserId) {
+    userId.value = storedUserId;
+  }
+
   try {
-    const res = await fetch('http://127.0.0.1:8000/spots');
-    const rawData = await res.json();
-    const spots = rawData.data || [];
+    const spotRes = await fetch(`http://127.0.0.1:8000/study_spots/${spotId}`);
+    const spotData = await spotRes.json();
+    const spot = spotData.data;
 
-    const mapped = spots.map((spot) => ({
+    listing.value = {
       id: spot.spot_id,
       name: spot.spot_name,
       address: spot.address,
+      default_img: spot.default_img,
       rating: parseFloat(spot.avg_rating) || 0,
-      default_img_url: spot.default_img,
-      opening_hours: {
-        Sunday: `${spot.sunday_open?.slice(0, 5)}–${spot.sunday_close?.slice(0, 5)}`,
-        Monday: `${spot.monday_open?.slice(0, 5)}–${spot.monday_close?.slice(0, 5)}`,
-        Tuesday: `${spot.tuesday_open?.slice(0, 5)}–${spot.tuesday_close?.slice(0, 5)}`,
-        Wednesday: `${spot.wednesday_open?.slice(0, 5)}–${spot.wednesday_close?.slice(0, 5)}`,
-        Thursday: `${spot.thursday_open?.slice(0, 5)}–${spot.thursday_close?.slice(0, 5)}`,
-        Friday: `${spot.friday_open?.slice(0, 5)}–${spot.friday_close?.slice(0, 5)}`,
-        Saturday: `${spot.saturday_open?.slice(0, 5)}–${spot.saturday_close?.slice(0, 5)}`
-      }
+      has_outlets: spot.has_outlets === 1 || spot.has_outlets === "Yes",
+      has_food: spot.has_food === 1 || spot.has_food === "Yes",
+      has_printing: spot.has_printing === 1 || spot.has_printing === "Yes",
+      has_prayer_space: spot.has_prayer_space === 1 || spot.has_prayer_space === "Yes",
+      has_spacious_seating: spot.has_spacious_seating === 1 || spot.has_spacious_seating === "Yes",
+      has_meeting_rooms: spot.has_meeting_rooms === 1 || spot.has_meeting_rooms === "Yes",
+      on_campus: spot.on_campus === 1 || spot.on_campus === "Yes",
+      hours: (spot.hours || []).reduce((acc, hour) => {
+        acc[hour.day] = {
+          opens: secondsToHHMM(hour.opens),
+          closes: secondsToHHMM(hour.closes),
+        };
+        return acc;
+      }, {})
+    };
+
+    // Fetch the top tags separately (optional if you want them per listing)
+    const tagsRes = await fetch('http://127.0.0.1:8000/study_spots/top_tags');
+    const tagsData = await tagsRes.json();
+    topTagsPerSpot.value = tagsData.data;
+    listing.value.tags = topTagsPerSpot.value[listing.value.id] || [];
+
+    const reviewsRes = await fetch(`http://127.0.0.1:8000/reviews/${spotId}`);
+    const reviewsData = await reviewsRes.json();
+
+    reviews.value = reviewsData.data.map(review => ({
+      id: review.review_id,
+      userId: review.user_id,
+      userName: review.user_name || "Name",
+      degree: review.degree || '',
+      academicLevel: review.academic_level || '',
+      college: review.bu_college || '',
+      content: review.review_content,
+      rating: review.rating,
+      image: review.review_img ? `/images/${review.review_img}` : null,
+      tags: review.review_tags ? review.review_tags.split(',').map(tag => tag.trim()) : [],
+      timestamp: review.timestamp,
     }));
 
-    listing.value = mapped.find((s) => s.id === spotId);
-  } catch (err) {
-    console.error('Failed to fetch listings:', err);
+    onAuthStateChanged(auth, (user) => {
+  if (user) {
+    isLoggedIn.value = true;
+    localStorage.setItem('userId', user.uid);
+    userId.value = user.uid;
+  } else {
+    isLoggedIn.value = false;
+    localStorage.removeItem('userId');
+    userId.value = null;
   }
-};
-
-onMounted(() => {
-  fetchListings();
 });
+
+  } catch (err) {
+    console.error("Data fetch failed:", err);
+  }
+});
+
+function formatOpeningHours(listing, currentDay) {
+  const hours = listing.hours?.[currentDay];
+  if (!hours) return 'Closed';
+  return `${hours.opens}-${hours.closes}`;
+}
 
 const goToProfile = () => {
   showDropdown.value = false;
@@ -317,10 +390,7 @@ const toggleDropdown = () => {showDropdown.value = !showDropdown.value;};
 const navigateTo = (path) => {window.location.href = path; showDropdown.value = false;};
 
 const showForm = ref(false);
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  isPlusRotated.value = !isPlusRotated.value;
-};
+
 const showFlagPopup = ref(false);
 const toggleFlagPopup = () => {
   showFlagPopup.value = !showFlagPopup.value;
@@ -332,8 +402,48 @@ const submitFlagForm = () => {
   showFlagPopup.value = false;
 };
 
-const rating = ref(0);          // final selected rating
-const hoverRating = ref(0);     // temporary preview on hover
+const showLoginPopup = ref(false);
+const alreadyReviewedPopup = ref(false);
+
+const userId = ref(localStorage.getItem('userId') || null);
+
+const checkIfCanSubmit = async () => {
+  isPlusRotated.value = !isPlusRotated.value;
+
+  if (showLoginPopup.value || alreadyReviewedPopup.value || showForm.value) {
+    showLoginPopup.value = false;
+    alreadyReviewedPopup.value = false;
+    showForm.value = false;
+    return;
+  }
+
+  if (!isLoggedIn.value) {
+    showLoginPopup.value = true;
+    return;
+  }
+
+  userId.value = localStorage.getItem('userId');
+  if (!userId.value) {
+    showLoginPopup.value = true;
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/reviews/${spotId}/user/${userId.value}`);
+    if (response.ok) {
+      alreadyReviewedPopup.value = true;
+    } else if (response.status === 404) {
+      showForm.value = true;
+    } else {
+      console.error('Unexpected server response:', response.status);
+    }
+  } catch (err) {
+    console.error('Error checking if review exists:', err);
+  }
+};
+
+const rating = ref(0);
+const hoverRating = ref(0);
 
 const handleHover = (e, index) => {
   const { offsetX, target } = e;
@@ -360,20 +470,14 @@ const getStarIcon = (i) => {
 };
 
 const getStarIcons = (rating) => {
-  const stars = [];
-  const fullStar = '/icons/Full_Star.png';
-  const halfStar = '/icons/Half_Star.png';
-  const emptyStar = '/icons/Star.png';
-
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   const empty = 5 - full - (half ? 1 : 0);
-
-  for (let i = 0; i < full; i++) stars.push(fullStar);
-  if (half) stars.push(halfStar);
-  for (let i = 0; i < empty; i++) stars.push(emptyStar);
-
-  return stars;
+  return [
+    ...Array(full).fill('/icons/Full_Star.png'),
+    ...(half ? ['/icons/Half_Star.png'] : []),
+    ...Array(empty).fill('/icons/Star.png')
+  ];
 };
 
 const isPlusRotated = ref(false);
@@ -406,7 +510,7 @@ const toggleFlag = (reviewId) => {
 
 const spotPreferences = attributeTags;
 const tagClasses = tagColors;
-const selectedDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
 const showPreferenceCard = ref(false);
 
 const reviewTagsKey = `reviewTags-${spotId}`;
@@ -415,7 +519,7 @@ const reviewKey = `reviews-${spotId}`;
 const selectedReviewTags = ref(JSON.parse(localStorage.getItem(reviewTagsKey) || '[]'));
 const tempSelectedReviewTags = ref([...selectedReviewTags.value]);
 
-const reviews = ref(JSON.parse(localStorage.getItem(reviewKey) || '[]'));
+const reviews = ref([]);
 
 const toggleTempTag = (tag) => {
   const index = tempSelectedReviewTags.value.indexOf(tag);
@@ -445,7 +549,6 @@ const submitForm = () => {
   uploadedImage.value = '';
   rating.value = 0;
   hoverRating.value = 0;
-  showForm.value = false;
 };
 
 function formatTimeAgo(dateString) {
@@ -468,15 +571,27 @@ function formatTimeAgo(dateString) {
   return `${years} year${years > 1 ? 's' : ''} ago`;
 }
 
-function handleProfileClick() {
+async function handleProfileClick() {
   if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
+    await signOut(auth);
+    setLoggedIn(false);
+    localStorage.removeItem('userId');
+    userId.value = null;
   } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
-    });
+    try {
+      await loginWithGoogle();
+      const user = auth.currentUser;
+      if (user) {
+        localStorage.setItem('userId', user.uid);
+        userId.value = user.uid;
+        setLoggedIn(true);
+        window.location.reload();
+      } else {
+        console.error('Login succeeded but no user info found.');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   }
 }
 </script>
@@ -491,6 +606,21 @@ function handleProfileClick() {
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
+  background: #f9fdad;
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.flag-popup {
+  margin-top: 120px;
+  width: 455px;
+  position: absolute;
+  top: 380px;
+  left: 75%;
+  transform: translateX(-50%);
+  z-index: 998;
   background: #f9fdad;
   border: 2px solid black;
   border-radius: 20px;
@@ -544,7 +674,9 @@ textarea {
 
 .review-card{
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
+  grid-template-columns: 1fr 160px;
+  height: fit-content;
   border: 1.5px solid black;
   border-radius: 30px;
   background: #fdfde3;
@@ -552,6 +684,26 @@ textarea {
   margin: 20px 0;
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
 }
+
+.review-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 82%;
+  margin-left: 5px;
+  /*border: 2px dashed darkblue;*/
+}
+
+.review-right {
+  display: flex;
+  width: 18%;
+  margin-right: 5px;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: space-between;
+  /*border: 2px dashed rebeccapurple;*/
+}
+
 
 .pop-up-listing-title{
   font-size: 24px;
@@ -609,28 +761,15 @@ textarea {
   align-items: flex-start;
 }
 
-.tag-grid {
+.pop-up-tag-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   flex-grow: 1;
 }
 
-.tags-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  margin-top: 15px;
-}
-
 .tag{
-  cursor: pointer;
-}
-
-.date{
-  font-family: 'Sansation Light', serif;
-  font-size: 15px;
+  width: fit-content;
 }
 
 .plus-icon {
@@ -644,12 +783,14 @@ textarea {
 }
 
 .flag-icon {
-  display: flex;
+  display: block;
   justify-content: flex-end;
   width: 40px;
   height: auto;
+  margin-left: 70px;
   margin-top: -10px;
   cursor: pointer;
+  /*border: 2px dashed pink;*/
 }
 
 .optional-text{
@@ -686,33 +827,44 @@ textarea {
 .listing-box .listing-image-wrapper {
   width: 155px;
   height: 135px;
+  /*border: 2px dashed red;*/
+}
+
+.review-card .listing-image-wrapper {
+  align-self: center; /* <-- add this */
+}
+
+.listing-image-wrapper.has-image {
+  margin-right: 35px;
 }
 
 .review-card .review-image,
 .listing-box .listing-image {
   width: 155px;
   height: 135px;
+  margin-left: 10px;
   object-fit: cover;
   border-radius: 20px;
   border: 1px solid black;
 }
 
 .listing-content-wrapper {
-  flex: 1;
-  flex-direction: column;
-  justify-content: flex-start;
   display: grid;
+  grid-template-columns: auto auto;
   grid-template-areas:
-  "name date"
-  "degree degree"
-  "message message";
+    "name date"
+    "degree degree"
+    "message message";
+  gap: 5px 20px;
+  /*border: 2px dashed yellow;*/
 }
 
 .listing-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   line-height: 10%;
+  /*border: 2px dashed deeppink;*/
 }
 
 .listing-title {
@@ -761,26 +913,109 @@ textarea {
   cursor: pointer;
 }
 
-.user-name{
+.review-user-name{
   display: flex;
+  margin: 10px;
   justify-content: space-between;
   align-items: center;
-  line-height: 10%;
-  margin: 15px 25px;
   font-family: 'Sansation Regular', serif;
-  font-size: 26px;
+  font-size: 27px;
+  /*border: 2px dashed brown;*/
 }
 
-.user-degree{
-  margin: 15px 25px;
+.review-degree-info{
+  width: fit-content;
+  letter-spacing: 0.5px;
   font-family: 'Sansation Light', serif;
-  font-size: 16px;
+  font-size: 17px;
   font-style: italic;
+  /*border: 2px dashed green;*/
 }
 
-.message{
+.review-date{
   font-family: 'Sansation Light', serif;
-  font-size: 16px;
+  width: fit-content;
+  font-size: 13px;
+  letter-spacing: normal;
+  word-spacing: normal;
+  margin-top: -5px;
+  /*border: 2px dashed orangered;*/
 }
+
+.flag-date-wrapper {
+  display: flex;
+  height: 55px;
+  align-items: center;
+  justify-content: center;
+  /*border: 2px dashed darkslategray;*/
+}
+
+.review-degree-info,
+.review-content {
+  margin: 7px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.review-content {
+  flex: 1;
+  line-height: 135%;
+  font-family: 'Sansation Light', serif;
+  font-size: 16.5px;
+  letter-spacing: 0.5px;
+  word-spacing: 1px;
+  /*border: 2px dashed orange;*/
+}
+
+.review-content-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  /*border: 2px dashed chartreuse;*/
+}
+
+.review-stars{
+  display: flex;
+  margin-top: -20px;
+  margin-right: 120px;
+  flex-shrink: 0;
+  /*border: 2px dashed purple;*/
+}
+
+.review-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  /*border: 2px dashed greenyellow;*/
+}
+
+.login-popup, .already-reviewed-popup {
+  position: absolute;
+  top: 270px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  background: #f9fdad;
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 15px;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.popup-content {
+  font-family: 'Victor Mono', serif;
+  font-size: 18px;
+  letter-spacing: 1.2px;
+}
+
 
 </style>

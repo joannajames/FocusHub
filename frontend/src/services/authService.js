@@ -6,6 +6,11 @@ export async function loginWithGoogle() {
   const result = await signInWithPopup(auth, provider);
   const idToken = await result.user.getIdToken();
 
+  const email = result.user.email;
+  const username = email.split('@')[0];
+
+  localStorage.setItem("username", username);
+
   // Send to backend to get JWT
   const res = await fetch("http://localhost:8000/auth/google", {
     method: "POST",
@@ -15,5 +20,6 @@ export async function loginWithGoogle() {
 
   const data = await res.json();
   localStorage.setItem("jwt", data.access_token);
+
   return data;
 }
