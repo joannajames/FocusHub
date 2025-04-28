@@ -47,7 +47,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'jojames@bu.edu','jojames',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Backend Developer'),(2,'cmphilip@bu.edu','cmphilip','christal.jpeg','Aesthetic, H2O Stations, Indie (Non-Chain), Low Traffic, Smiley Service','CS673, CS662','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Database Manager'),(3,'zara87@bu.edu','zara87',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Security Specialist'),(4,'rdhoda@bu.edu','rdhodha',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Frontend Developer');
+INSERT INTO `users` VALUES (1,'jojames@bu.edu','jojames',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Backend Developer'),(2,'cmphilip@bu.edu','cmphilip','christal.jpeg','aesthetic, h2o stations, indie (non-chain), low traffic, smiley service','CS673, CS662','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Database Manager'),(3,'zara87@bu.edu','zara87',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Security Specialist'),(4,'rdhoda@bu.edu','rdhoda',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Frontend Developer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
