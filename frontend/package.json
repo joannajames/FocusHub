@@ -10,6 +10,7 @@
   "dependencies": {
     "@fontsource/rubik-doodle-shadow": "^5.1.1",
     "@fontsource/rubik-gemstones": "^5.2.5",
+    "axios": "^1.9.0",
     "core-js": "^3.8.3",
     "firebase": "^11.6.0",
     "vue": "^3.2.13",

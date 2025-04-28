@@ -64,6 +64,7 @@ import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import router from "@/router";
+import axios from 'axios';
 
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 
@@ -83,17 +84,41 @@ const navigateTo = (path) => {
   showDropdown.value = false;
 };
 
-function handleProfileClick() {
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
+}
+
+async function handleProfileClick() {
   if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
+    await signOut(auth);
+    setLoggedIn(false);
   } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
   }
 }
+
 
 watch(isLoggedIn, (newVal) => {
   if (newVal) {

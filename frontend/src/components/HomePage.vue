@@ -37,6 +37,14 @@
         </div>
       </header>
 
+      <div v-if="showCompleteProfilePopup" class="login-popup">
+        <div class="popup-content">
+            Please complete your profile!
+            <br><br>
+            <button @click="goToCompleteProfileForm">Fill Profile</button>
+        </div>
+      </div>
+
       <div class="main-content left-margin">
         <br>
         <br>
@@ -67,6 +75,7 @@ import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import router from "@/router";
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
+import axios from 'axios';
 
 const showDropdown = ref(false);
 
@@ -79,23 +88,50 @@ const navigateTo = (path) => {
   showDropdown.value = false;
 };
 
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
+}
+
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push('/profile');  // or wherever you want them to fill in their profile
+}
+
 const goToProfile = () => {
   showDropdown.value = false;
   router.push(isLoggedIn.value ? '/profile' : '/unavailable');
 };
 
-function handleProfileClick() {
+async function handleProfileClick() {
   if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
+    await signOut(auth);
+    setLoggedIn(false);
   } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
   }
 }
-
 </script>
 
 <style>

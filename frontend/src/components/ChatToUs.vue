@@ -37,7 +37,13 @@
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
-
+               div v-if="showCompleteProfilePopup" class="login-popup">
+                <div class="popup-content">
+                    Please complete your profile!
+                    <br><br>
+                    <button @click="goToCompleteProfileForm">Fill Profile</button>
+                </div>
+              </div>
               <div class="main-content">
                 <h1 class="title">chat to us</h1>
 
@@ -78,7 +84,6 @@
                   </form>
                 </div>
               </div>
-    </div>
   </div>
 </template>
 
@@ -92,7 +97,9 @@ import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import router from "@/router";
+import axios from 'axios';
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
+
 
 const showDropdown = ref(false);
 
@@ -127,18 +134,46 @@ const submitForm = () => {
   window.location.href = `mailto:hi.focushub@gmail.com?subject=${subject}&body=${body}`;
 };
 
-function handleProfileClick() {
-  if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
-  } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
-    });
-  }
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
 }
 
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push('/profile');  // or wherever you want them to fill in their profile
+}
+
+
+async function handleProfileClick() {
+  if (isLoggedIn.value) {
+    await signOut(auth);
+    setLoggedIn(false);
+  } else {
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
+  }
+}
 </script>
 
 <style scoped>

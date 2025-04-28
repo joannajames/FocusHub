@@ -37,7 +37,13 @@
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
-
+      <div v-if="showCompleteProfilePopup" class="login-popup">
+        <div class="popup-content">
+            Please complete your profile!
+            <br><br>
+            <button @click="goToCompleteProfileForm">Fill Profile</button>
+        </div>
+      </div>
       <div class="main-content left-margin">
         <h1 class="title">profile</h1>
 
@@ -153,6 +159,7 @@ import {auth} from "@/firebase";
 import {loginWithGoogle} from "@/services/authService";
 import { useAuthStatus } from '@/store/authStatus';
 import router from "@/router";
+import axios from 'axios';
 
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const showDropdown = ref(false);
@@ -198,18 +205,45 @@ const navigateTo = (path) => {
   showDropdown.value = false;
 };
 
-function handleProfileClick() {
-  if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
-  } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
-    });
-  }
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
 }
 
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push('/profile');  // or wherever you want them to fill in their profile
+}
+
+async function handleProfileClick() {
+  if (isLoggedIn.value) {
+    await signOut(auth);
+    setLoggedIn(false);
+  } else {
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
+  }
+}
 watch(isLoggedIn, (val) => {
   if (!val) {
     router.push('/unavailable');

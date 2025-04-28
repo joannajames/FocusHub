@@ -37,7 +37,13 @@
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
-
+      <div v-if="showCompleteProfilePopup" class="login-popup">
+            <div class="popup-content">
+                Please complete your profile!
+                <br><br>
+                <button @click="goToCompleteProfileForm">Fill Profile</button>
+            </div>
+      </div>
       <div class="left-margin">
         <br>
         <br>
@@ -89,7 +95,7 @@
 
 import '@/assets/global.css';
 import {ref} from "vue";
-
+import axios from 'axios';
 import { loginWithGoogle } from '@/services/authService';
 import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
@@ -113,15 +119,44 @@ const navigateTo = (path) => {
   showDropdown.value = false; // hide after click
 };
 
-function handleProfileClick() {
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
+}
+
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push('/profile');  // or wherever you want them to fill in their profile
+}
+
+
+async function handleProfileClick() {
   if (isLoggedIn.value) {
-    signOut(auth).then(() => {
-      setLoggedIn(false); // Updates both ref + localStorage
-    });
+    await signOut(auth);
+    setLoggedIn(false);
   } else {
-    loginWithGoogle().then(() => {
-      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
   }
 }
 

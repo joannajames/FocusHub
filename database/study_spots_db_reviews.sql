@@ -36,7 +36,8 @@ CREATE TABLE `reviews` (
   KEY `spot_id` (`spot_id`),
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`spot_id`) REFERENCES `spots` (`spot_id`) ON DELETE CASCADE,
-  CONSTRAINT `reviews_chk_1` CHECK ((`rating` between 1 and 5))
+  CONSTRAINT `reviews_chk_1` CHECK ((`rating` between 1 and 5)),
+  CONSTRAINT `reviews_unique_user_spot` UNIQUE (`user_id`, `spot_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

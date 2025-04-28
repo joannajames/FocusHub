@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.logger import logger
 from pydantic import BaseModel
 from auth import get_current_user, get_current_admin, create_access_token, authenticate_user, verify_google_token
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
-    get_reviews_for_spot, get_top_tags_per_spot, check_user_review
+    get_reviews_for_spot, get_top_tags_per_spot, check_user_review, get_study_spot_by_id, check_or_add_user, \
+    get_user_info_by_email
 from datetime import timedelta
 from fastapi import Path
 
@@ -19,33 +20,73 @@ def google_login(token: str):
 
 # User Login - Generates JWT Token
 @router.post("/token")
-def login(email: str, password: str):
-    user = authenticate_user(email, password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+def login(email: str):
+    # No password check anymore, trust Firebase for authentication
+    if not email.endswith("@bu.edu"):
+        raise HTTPException(status_code=403, detail="Only BU emails allowed.")
 
-    access_token = create_access_token(
-        data={"sub": user["email"], "user_id": user["user_id"]},  # ✅ include user_id
-        expires_delta=timedelta(minutes=60))
+    access_token = create_access_token(data={"sub": email}, expires_delta=timedelta(minutes=60))
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Fetch all study spots (Publicly accessible)
-@router.get("/study_spots")
-def get_study_spots(
-    has_outlets: str = None,
-    has_meeting_rooms: str = None,
-    has_food: str = None,
-    has_spacious_seating: str = None,
-    has_printing: str = None,
-    has_prayer_space: str = None,
-    on_campus: str = None,
-):
-    return {"data": get_all_study_spots(has_outlets, has_meeting_rooms, has_food, has_spacious_seating, has_printing, has_prayer_space, on_campus)}
+
+@router.get("/users/me")
+def get_my_profile(user: dict = Depends(get_current_user)):
+    # 🔵 Ensure user exists (insert if needed)
+    check_or_add_user(user["email"])
+
+    # 🔵 Fetch full profile info
+    user_info = get_user_info_by_email(user["email"])
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 🔵 Determine if profile is incomplete
+    is_new_user = (
+            not user_info.get("degree") or
+            not user_info.get("academic_level") or
+            not user_info.get("bu_college")
+    )
+
+    return {
+        "user_id": user_info["user_id"],
+        "is_new_user": is_new_user,
+        "user_info": user_info
+    }
+
+from crud import update_user_profile  # import at the top
+
+@router.post("/users/{user_id}/complete_profile")
+def complete_user_profile(user_id: int,
+                           degree: str = Body(...),
+                           academic_level: str = Body(...),
+                           bu_college: str = Body(...)):
+    update_user_profile(user_id, degree, academic_level, bu_college)
+    return {"message": "Profile updated successfully"}
 
 @router.get("/study_spots/top_tags")
 def fetch_top_tags():
     tags = get_top_tags_per_spot()
     return {"data": dict(tags)}
+
+# Fetch all study spots (Publicly accessible)
+@router.get("/study_spots")
+def fetch_all_study_spots():
+    spots = get_all_study_spots()
+    return {"data": spots}
+
+# Fetch study spots by ID (Publicly accessible)
+@router.get("/study_spots/{spot_id}")
+def read_study_spot(spot_id: int):
+    try:
+        spot_rows = get_study_spot_by_id(spot_id)
+
+        if not spot_rows:
+            raise HTTPException(status_code=404, detail="Study spot not found")
+
+        return {"data": spot_rows}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Database error")
+
 @router.get("/study_spots/day/{day_index}")
 def route_study_spots_open_on_day(
         day_index: int = Path(ge=0, le=6),
@@ -79,7 +120,7 @@ def route_study_spots_open_on_day(
     logger.info(f"Found {len(results)} study spots for {weekday}")
 
     return {"data": results}
-# Add a new study spot (Admin Only)
+
 # Add a new study spot (Admin Only)
 @router.post("/study_spots")
 def create_study_spot(

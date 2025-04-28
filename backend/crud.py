@@ -80,6 +80,41 @@ def get_all_study_spots(
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+
+#Get Spot by ID
+
+def get_study_spot_by_id(spot_id: int):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+            SELECT 
+                s.*,
+                h.opens AS open_time,
+                h.closes AS close_time,
+                h.day
+            FROM spots s
+            JOIN hours h ON s.spot_id = h.spot_id
+            WHERE s.spot_id = %s
+        """
+        cursor.execute(query, (spot_id,))
+        spot_rows = cursor.fetchall()
+
+        return spot_rows  # Could be multiple rows (one for each day)
+    except Exception as e:
+        import traceback
+        print("DB ERROR:", e)
+        traceback.print_exc()
+        raise
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+
 # Add a new study spot
 def add_study_spot(spot):
     try:
@@ -255,17 +290,22 @@ def get_reviews_for_spot(spot_id):
         logger.info(f"Fetching reviews for spot_id={spot_id}")
         query = """
             SELECT 
-                review_id,
-                user_id,
-                spot_id,
-                review_content,
-                rating,
-                review_img,
-                review_tags,
-                timestamp
+                reviews.review_id,
+                reviews.user_id,
+                users.user_name,
+                users.degree,
+                users.academic_level,
+                users.bu_college,
+                reviews.spot_id,
+                reviews.review_content,
+                reviews.rating,
+                reviews.review_img,
+                reviews.review_tags,
+                reviews.timestamp
             FROM reviews
-            WHERE spot_id = %s
-            ORDER BY timestamp DESC
+            JOIN users ON reviews.user_id = users.user_id 
+            WHERE reviews.spot_id = %s
+            ORDER BY reviews.timestamp DESC
         """
         cursor.execute(query, (spot_id,))
         reviews = cursor.fetchall()
@@ -300,3 +340,87 @@ def check_user_review(user_id, spot_id):
     finally:
         cursor.close()
         conn.close()
+
+def check_or_add_user(email: str):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 🔵 Check if user exists by bu_user_id
+        query = "SELECT user_id FROM users WHERE bu_user_id = %s"
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
+
+        if user:
+            logger.info(f"User {email} already exists with user_id {user['user_id']}")
+            return user['user_id']
+        else:
+            # 🔵 Insert new user
+            insert_query = """
+                INSERT INTO users (bu_user_id, user_name)
+                VALUES (%s, %s)
+            """
+            cursor.execute(insert_query, (email, email))  # same email for both fields initially
+            conn.commit()
+            logger.info(f"New user {email} added with user_id {cursor.lastrowid}")
+            return cursor.lastrowid
+
+    except Exception as e:
+        logger.error(f"Error checking or adding user: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+def update_user_profile(user_id: int, degree: str, academic_level: str, bu_college: str):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            UPDATE users
+            SET degree = %s,
+                academic_level = %s,
+                bu_college = %s
+            WHERE user_id = %s
+        """
+        values = (degree, academic_level, bu_college, user_id)
+        cursor.execute(query, values)
+        conn.commit()
+    except Exception as e:
+        logger.error(f"Error updating user profile: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+def get_user_info_by_email(email: str):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+            SELECT user_id, bu_user_id, user_name, degree, academic_level, bu_college
+            FROM users
+            WHERE bu_user_id = %s
+        """
+        cursor.execute(query, (email,))
+        user_info = cursor.fetchone()
+        return user_info
+    except Exception as e:
+        logger.error(f"Error fetching user info: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

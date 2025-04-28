@@ -65,6 +65,14 @@
         </div>
       </header>
 
+        <div v-if="showCompleteProfilePopup" class="login-popup">
+          <div class="popup-content">
+            Please complete your profile!
+            <br><br>
+            <button @click="goToCompleteProfileForm">Fill Profile</button>
+          </div>
+        </div>
+
       <!-- Sidebar Filters -->
       <div class="fixed-left-column">
         <aside class="sidebar">
@@ -110,6 +118,9 @@
               <p class="listing-address">
                 {{ listing.address }} • {{ formatOpeningHours(listing, selectedDay) }}
               </p>
+              <p class="listing-status" :class="{ open: getOpenStatus(listing, selectedDay) === 'Open Now', closed: getOpenStatus(listing, selectedDay) === 'Closed Now' }">
+                {{ getOpenStatus(listing, selectedDay) }}
+              </p>
               <div class="listing-footer-wrapper">
                 <div class="listing-tags">
                   <span
@@ -146,15 +157,43 @@ import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { apiFetch } from '@/services/api';
-
+import axios from 'axios';
 
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const router = useRouter();
 const goToReviews = (id) => router.push(`/reviews/${id}`);
 const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
-function handleProfileClick() {
-  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
+async function handleProfileClick() {
+  if (isLoggedIn.value) {
+    await signOut(auth);
+    setLoggedIn(false);
+  } else {
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
+    }
+  }
 }
+
+const secondsToHHMM = (seconds) => {
+  const date = new Date(seconds * 1000);
+  return date.toISOString().substring(11, 16); // "HH:MM"
+};
 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
@@ -189,20 +228,96 @@ const toggleFavourite = (id) => {
   localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
 };
 
-function secondsToHHMM(seconds) {
-  if (!seconds && seconds !== 0) return 'Closed';
-
-  const date = new Date(seconds * 1000);
-  if (isNaN(date.getTime())) return 'Closed';
-
-  return date.toISOString().substring(11, 16);
-}
-
 function formatOpeningHours(listing, selectedDay) {
   const hours = listing.hours?.[selectedDay];
-  if (!hours) return 'Closed';
-  return `${hours.opens}-${hours.closes}`;
+  if (!hours || !hours.opens || !hours.closes) return 'Hours not available';
+
+  const formatTime = (hhmm) => {
+    if (!hhmm || typeof hhmm !== 'string' || !hhmm.includes(':')) return 'Hours not available';
+    const [hourString, minuteString] = hhmm.split(':');
+    const hour = parseInt(hourString, 10);
+    const minute = parseInt(minuteString, 10);
+    if (isNaN(hour) || isNaN(minute)) return 'Hours not available';
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${adjustedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  if (hours.opens === 'Closed' || hours.closes === 'Closed') {
+    return 'Hours not available';
+  }
+
+  const [openHour, openMinute] = hours.opens.split(':').map(Number);
+  const [closeHour, closeMinute] = hours.closes.split(':').map(Number);
+
+  if (isNaN(openHour) || isNaN(closeHour) || isNaN(openMinute) || isNaN(closeMinute)) {
+    return 'Hours not available';
+  }
+
+  const openTotalMinutes = openHour * 60 + openMinute;
+  const closeTotalMinutes = closeHour * 60 + closeMinute;
+
+  const openFormatted = formatTime(hours.opens);
+  const closeFormatted = formatTime(hours.closes);
+
+  if (closeTotalMinutes < openTotalMinutes) {
+    return `${openFormatted} - ${closeFormatted}`;
+  } else {
+    return `${openFormatted} - ${closeFormatted}`;
+  }
 }
+
+
+function getOpenStatus(listing, selectedDay) {
+  const todayHours = listing.hours?.[selectedDay];
+  if (!todayHours || !todayHours.opens || !todayHours.closes) {
+    return 'Closed Now';
+  }
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const [openHour, openMinute] = todayHours.opens.split(':').map(Number);
+  const [closeHour, closeMinute] = todayHours.closes.split(':').map(Number);
+
+  if (isNaN(openHour) || isNaN(openMinute) || isNaN(closeHour) || isNaN(closeMinute)) {
+    return 'Closed Now';
+  }
+
+  const openTotalMinutes = openHour * 60 + openMinute;
+  const closeTotalMinutes = closeHour * 60 + closeMinute;
+
+  if (closeTotalMinutes < openTotalMinutes) {
+    // Spot closes after midnight
+    if (currentMinutes >= openTotalMinutes || currentMinutes <= closeTotalMinutes) {
+      return 'Open Now';
+    } else {
+      return 'Closed Now';
+    }
+  } else {
+    // Normal same-day closing
+    if (currentMinutes >= openTotalMinutes && currentMinutes <= closeTotalMinutes) {
+      return 'Open Now';
+    } else {
+      return 'Closed Now';
+    }
+  }
+}
+
+const showCompleteProfilePopup = ref(false);
+const completeProfileUserId = ref(null);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
+}
+
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push('/profile');  // or wherever you want them to fill in their profile
+}
+
+
 
 onMounted(async () => {
   try {
@@ -233,10 +348,10 @@ onMounted(async () => {
       }
 
       // Add each day's hours
-      if (row.day !== null) {
+      if (row.day !== null && row.open_time  && row.close_time) {
         spotMap[spot_id].hours[row.day] = {
-          opens: secondsToHHMM(row.opens),
-          closes: secondsToHHMM(row.closes),
+            opens: secondsToHHMM(row.open_time),
+            closes: secondsToHHMM(row.close_time),
         };
       }
     }
@@ -458,6 +573,23 @@ const getStarIcons = (rating) => {
   font-family: 'Sansation Light', serif;
   letter-spacing: 1px;
 }
+
+.listing-status {
+  margin: 5px 25px;
+  font-size: 16px;
+  font-family: 'Sansation Light', serif;
+}
+
+.listing-status.open {
+  color: green;
+  font-weight: bold;
+}
+
+.listing-status.closed {
+  color: red;
+  font-weight: bold;
+}
+
 
 .listing-tags {
   display: flex;

@@ -5,6 +5,7 @@ from auth import get_current_user  # Authentication
 from controller import router
 import logging
 
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

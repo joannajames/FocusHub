@@ -76,6 +76,15 @@
             </div>
           </div>
 
+          <div v-if="showCompleteProfilePopup" class="login-popup">
+            <div class="popup-content">
+                Please complete your profile!
+                <br><br>
+                <button @click="goToCompleteProfileForm">Fill Profile</button>
+            </div>
+          </div>
+
+
           <div v-if="showForm" class="form-popup">
             <form class="attributes-form" @submit.prevent>
               <div class="submit-icon-wrapper">
@@ -272,7 +281,7 @@
 <script setup>
 import { useRoute } from 'vue-router';
 const route = useRoute();
-const spotId = parseInt(route.params.id);
+const spot_id = parseInt(route.params.id);
 import {onMounted, ref} from "vue";
 import '@/assets/global.css';
 import { favourites, toggleFavourite } from '@/store/favourites';
@@ -283,7 +292,7 @@ import {loginWithGoogle} from "@/services/authService";
 import {useAuthStatus} from "@/store/authStatus";
 import { onAuthStateChanged } from 'firebase/auth';
 import { apiFetch } from '@/services/api';
-
+import axios from 'axios';
 
 const username = ref('Name');
 const selectedTag = ref('');
@@ -300,17 +309,20 @@ function secondsToHHMM(seconds) {
 
 onMounted(async () => {
   const storedUsername = localStorage.getItem('username');
+
   if (storedUsername) {
     username.value = storedUsername;
+    console.log(username.value);
   }
 
-  const storedUserId = localStorage.getItem('userId');
+  const storedUserId = localStorage.getItem('user_id');
   if (storedUserId) {
-    userId.value = storedUserId;
+    user_id.value = storedUserId;
   }
+
 
   try {
-    const spotData = await apiFetch(`/study_spots`);
+    const spotData = await apiFetch(`/study_spots/${spot_id}`);
     const spot = spotData.data;
 
     listing.value = {
@@ -340,11 +352,11 @@ onMounted(async () => {
     topTagsPerSpot.value = tagsData.data;
     listing.value.tags = topTagsPerSpot.value[listing.value.id] || [];
 
-    const reviewsData = await apiFetch(`/reviews/${spotId}`);
+    const reviewsData = await apiFetch(`/reviews/${spot_id}`);
 
     reviews.value = reviewsData.data.map(review => ({
       id: review.review_id,
-      userId: review.user_id,
+      user_id: review.user_id,
       userName: review.user_name || "Name",
       degree: review.degree || '',
       academicLevel: review.academic_level || '',
@@ -359,12 +371,12 @@ onMounted(async () => {
     onAuthStateChanged(auth, (user) => {
   if (user) {
     isLoggedIn.value = true;
-    localStorage.setItem('userId', user.uid);
-    userId.value = user.uid;
+    localStorage.setItem('user_id', user.uid);
+    user_id.value = user.uid;
   } else {
     isLoggedIn.value = false;
-    localStorage.removeItem('userId');
-    userId.value = null;
+    localStorage.removeItem('user_id');
+    user_id.value = null;
   }
 });
 
@@ -404,7 +416,22 @@ const submitFlagForm = () => {
 const showLoginPopup = ref(false);
 const alreadyReviewedPopup = ref(false);
 
-const userId = ref(localStorage.getItem('userId') || null);
+const user_id = ref(localStorage.getItem('user_id') || null);
+
+const showCompleteProfilePopup = ref(false);
+
+function openCompleteProfilePopup(userId) {
+  showCompleteProfilePopup.value = true;
+  completeProfileUserId.value = userId;
+}
+
+const completeProfileUserId = ref(null);
+
+function goToCompleteProfileForm() {
+  showCompleteProfilePopup.value = false;
+  router.push(`/profile`);
+}
+
 
 const checkIfCanSubmit = async () => {
   isPlusRotated.value = !isPlusRotated.value;
@@ -421,14 +448,14 @@ const checkIfCanSubmit = async () => {
     return;
   }
 
-  userId.value = localStorage.getItem('userId');
-  if (!userId.value) {
+  user_id.value = localStorage.getItem('user_id');
+  if (!user_id.value) {
     showLoginPopup.value = true;
     return;
   }
 
   try {
-    const response = await apiFetch(`/reviews/${spotId}/user/${userId.value}`);
+    const response = await apiFetch(`/reviews/${spot_id}/user/${user_id.value}`);
     if (response.ok) {
       alreadyReviewedPopup.value = true;
     } else if (response.status === 404) {
@@ -512,8 +539,8 @@ const tagClasses = tagColors;
 const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
 const showPreferenceCard = ref(false);
 
-const reviewTagsKey = `reviewTags-${spotId}`;
-const reviewKey = `reviews-${spotId}`;
+const reviewTagsKey = `reviewTags-${spot_id}`;
+const reviewKey = `reviews-${spot_id}`;
 
 const selectedReviewTags = ref(JSON.parse(localStorage.getItem(reviewTagsKey) || '[]'));
 const tempSelectedReviewTags = ref([...selectedReviewTags.value]);
@@ -574,22 +601,25 @@ async function handleProfileClick() {
   if (isLoggedIn.value) {
     await signOut(auth);
     setLoggedIn(false);
-    localStorage.removeItem('userId');
-    userId.value = null;
   } else {
-    try {
-      await loginWithGoogle();
-      const user = auth.currentUser;
-      if (user) {
-        localStorage.setItem('userId', user.uid);
-        userId.value = user.uid;
-        setLoggedIn(true);
-        window.location.reload();
-      } else {
-        console.error('Login succeeded but no user info found.');
+    const userCredential = await loginWithGoogle();
+    const email = userCredential.user.email;
+
+    const tokenResponse = await axios.post('/token', { email: email });
+    const token = tokenResponse.data.access_token;
+    localStorage.setItem('token', token);
+    setLoggedIn(true);
+
+    const profileResponse = await axios.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    } catch (error) {
-      console.error('Login failed:', error);
+    });
+
+    if (profileResponse.data.is_new_user) {
+      openCompleteProfilePopup(profileResponse.data.user_id);
+    } else {
+      router.push('/');
     }
   }
 }
