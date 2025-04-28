@@ -12,9 +12,9 @@
               </a>
             </li>
             <li>
-              <a href="#" @click="navigateTo('/profile')">
-                -&nbsp;&nbsp;&nbsp;profile
-                <img src="/icons/Account.png" class="dropdown-icon" alt="Profile Icon" />
+              <a href="#" @click="goToProfile">
+                 -&nbsp;&nbsp;&nbsp;profile
+                 <img src="/icons/Account_Signed_Out.png" class="dropdown-icon" alt="Profile Icon" />
               </a>
             </li>
             <li>
@@ -32,7 +32,8 @@
           </ul>
         </div>
         <div class="nav-section">
-          <img src="/icons/Account.png" alt="Profile Icon" class="login-icon" @click="navigateTo('/profile')" />
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
+               alt="Profile Icon" class="login-icon" @click="handleProfileClick"/>
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
@@ -132,7 +133,7 @@
 
           <div class="right">
             <div class="card">
-              <h3>recommended spots:</h3>
+              <h3>my recommended spots:</h3>
             </div>
           </div>
         </div>
@@ -147,12 +148,24 @@ import { favouriteListings } from '@/store/favourites';
 import '@/assets/global.css';
 import {attributeTags, tagColors} from "@/constants/Tags";
 
+import {signOut} from "firebase/auth";
+import {auth} from "@/firebase";
+import {loginWithGoogle} from "@/services/authService";
+import { useAuthStatus } from '@/store/authStatus';
+import router from "@/router";
+
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const showDropdown = ref(false);
 const showForm = ref(false);
 const selectedTags = ref(JSON.parse(localStorage.getItem('selectedTags') || '[]'));
 const studyPreferences = attributeTags;
 const tagClasses = tagColors;
 const favouriteSpots = favouriteListings;
+
+const goToProfile = () => {
+  showDropdown.value = false;
+  router.push(isLoggedIn.value ? '/profile' : '/unavailable');
+};
 
 watch(selectedTags, (newVal) => {
   localStorage.setItem('selectedTags', JSON.stringify(newVal));
@@ -184,6 +197,25 @@ const navigateTo = (path) => {
   window.location.href = path;
   showDropdown.value = false;
 };
+
+function handleProfileClick() {
+  if (isLoggedIn.value) {
+    signOut(auth).then(() => {
+      setLoggedIn(false); // Updates both ref + localStorage
+    });
+  } else {
+    loginWithGoogle().then(() => {
+      setLoggedIn(true);  // Not strictly needed if onAuthStateChanged is set up
+    });
+  }
+}
+
+watch(isLoggedIn, (val) => {
+  if (!val) {
+    router.push('/unavailable');
+  }
+});
+
 </script>
 
 <style>
@@ -240,11 +272,18 @@ const navigateTo = (path) => {
   font-size: 28px;
 }
 
+.card h3{
+  margin-left: 20px;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
+}
+
+.tag{
   cursor: pointer;
 }
 

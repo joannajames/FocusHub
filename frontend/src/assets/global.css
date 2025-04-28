@@ -111,6 +111,7 @@ html, body {
   left: 0;
   padding: 25px 30px 10px 10px;
   background: #fdfde3;
+  z-index: 1;
   /*border: 2px dashed red;*/
 }
 
@@ -124,15 +125,17 @@ html, body {
 
 .nav-container {
   position: relative;
+  z-index: 1000;
   width: fit-content;
   /*border: 2px dashed orange;*/
 }
 
 .dropdown {
-  position: absolute;
+  position: fixed;
+  z-index: 99999;
   width: 320px;
-  top: 90px;
-  left: 40px;
+  top: 110px;
+  left: 30px;
   padding: 0;
   font-family: 'Rubik Doodle Shadow', serif;
   font-size: 22px;
@@ -144,6 +147,8 @@ html, body {
 }
 
 .dropdown a {
+  position: relative;
+  z-index: 99999;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -152,6 +157,8 @@ html, body {
 }
 
 .dropdown li {
+  position: relative;
+  z-index: 99999;
   padding: 15px 20px;
   border-bottom: 1px solid black;
 }
@@ -185,6 +192,8 @@ html, body {
 }
 
 .login-icon {
+  display: block;
+  object-fit: contain;
   width: 90px;
   height: 90px;
   cursor: pointer;
@@ -224,6 +233,7 @@ html, body {
   top: 20px;
   right: 20px;
   margin: 0;
+  z-index: 10;
 }
 
 .submit-icon {
@@ -264,5 +274,4 @@ We have two types of tags.
   font-size: 14px;
   border: 1.5px solid black;
   border-radius: 18px;
-  user-select: none;
 }

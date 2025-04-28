@@ -2,11 +2,11 @@
 export const attributeTags = [
   'aesthetic',
   'bike parking',
-  'BYOF',
+  'byof',
   'car parking',
   'courtyard',
   'early hours',
-  'H20 stations',
+  'h2o stations',
   'indie (non-chain)',
   'late hours',
   'low-light',
@@ -29,15 +29,22 @@ export const contactTags = [
   'partnerships',
 ];
 
+// Flag Form Tags — used in DynamicReviews.vue
+export const flagTags = [
+  'explicit content',
+  'privacy violation',
+  'inaccurate info',
+];
+
 // Combined tag-colour mapping
 export const tagColors = {
   'aesthetic': 'pink',
   'bike parking': 'orange',
-  'BYOF': 'yellow',
+  'byof': 'yellow',
   'car parking': 'green',
   'courtyard': 'blue',
   'early hours': 'pink',
-  'H20 stations': 'orange',
+  'h2o stations': 'orange',
   'indie (non-chain)': 'yellow',
   'late hours': 'green',
   'low-light': 'blue',
@@ -55,7 +62,11 @@ export const tagColors = {
   'remove a spot': 'pink',
   'report bug': 'orange',
   'partnerships': 'green',
+
+  'explicit content': 'orange',
+  'privacy violation': 'pink',
+  'inaccurate info': 'green',
 };
 
 // Export a combined list
-export const allTags = [...attributeTags, ...contactTags];
+export const allTags = [...attributeTags, ...contactTags, ...flagTags];

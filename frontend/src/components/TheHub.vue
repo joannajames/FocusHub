@@ -7,143 +7,89 @@
                alt="Menu"
                class="menu-icon"
                @click="toggleDropdown" />
-          <ul class="dropdown" v-show="showDropdown">
-            <li>
-              <a href="#" @click="navigateTo('/the_hub')">
-                -&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;Hub
-                <img
-                    src="/icons/Hub_Stars.png"
-                    class="dropdown-icon"
-                    alt="the Hub Icon"/>
-              </a>
-            </li>
-            <li>
-              <a href="#" @click="navigateTo('/profile')">
-                -&nbsp;&nbsp;&nbsp;profile
-                <img
-                    src="/icons/Account.png"
-                    alt="Profile"
-                    class="dropdown-icon"
-                />
-              </a>
-            </li>
-            <li>
-              <a href="#" @click="navigateTo('/chat_to_us')">
-                -&nbsp;&nbsp;&nbsp;chat&nbsp;&nbsp;to&nbsp;&nbsp;us
-                <img
-                    src="/icons/Chat_To_Us.png"
-                    alt="Chat"
-                    class="dropdown-icon"
-                />
-              </a>
-            </li>
-            <li>
-              <a href="#" @click="navigateTo('/our_constitution')">
-                -&nbsp;&nbsp;&nbsp;our&nbsp;&nbsp;constitution
-                <img src="/icons/Scroll.png"
-                     alt="Constitution"
-                     class="dropdown-icon"
-                />
-              </a>
-            </li>
-          </ul>
+            <ul class="dropdown"
+                v-show="showDropdown">
+              <li>
+                <a href="#"
+                   @click="navigateTo('/the_hub')">
+                  -&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;Hub
+                  <img src="/icons/Hub_Stars.png"
+                       class="dropdown-icon"
+                       alt="the Hub Icon" />
+                </a>
+              </li>
+              <li>
+                <a href="#" @click="goToProfile">
+                  -&nbsp;&nbsp;&nbsp;profile
+                  <img src="/icons/Account_Signed_Out.png"
+                       class="dropdown-icon"
+                       alt="Profile Icon" />
+                </a>
+              </li>
+              <li>
+                <a href="#" @click="navigateTo('/chat_to_us')">
+                  -&nbsp;&nbsp;&nbsp;chat&nbsp;&nbsp;to&nbsp;&nbsp;us
+                  <img src="/icons/Chat_To_Us.png"
+                       class="dropdown-icon"
+                       alt="Chat to Us Icon" />
+                </a>
+              </li>
+              <li>
+                <a href="#" @click="navigateTo('/our_constitution')">
+                  -&nbsp;&nbsp;&nbsp;our&nbsp;&nbsp;constitution
+                  <img src="/icons/Scroll.png"
+                       class="dropdown-icon"
+                       alt="Constitution Icon" />
+                </a>
+              </li>
+            </ul>
         </div>
         <div class="nav-section">
-          <img src="/icons/Account.png"
+          <img :src="isLoggedIn ? '/icons/Account_Logged_In.png' : '/icons/Account_Signed_Out.png'"
                alt="Profile Icon"
                class="login-icon"
-               @click="navigateTo('/profile')" />
+               @click="handleProfileClick" />
           <img src="/icons/FocusHub_Logo.png"
                alt="FocusHub Logo"
                class="logo-icon"
                @click="navigateTo('/')" />
           <div class="search-bar">
             <input type="text"
-                 v-model="searchQuery"
-                 placeholder="e.g. Life Alive Cafe"
-                 class="search-input" />
+                   v-model="searchQuery"
+                   placeholder="e.g. Life Alive Cafe"
+                   class="search-input" />
             <img src="/icons/Magnifying_Glass.png"
-               alt="Search"
-               class="search-icon" />
+                 alt="Search"
+                 class="search-icon" />
           </div>
         </div>
       </header>
 
+      <!-- Sidebar Filters -->
       <div class="fixed-left-column">
         <aside class="sidebar">
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Outlet.png"
-                alt="Outlets"
-                class="filter"
-                :class="{ active: activeFilters.includes('has_outlets') }"
-                @click="toggleFilter('has_outlets')"
-            />
-            <span class="custom-tooltip">Outlets?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Food.png"
-               alt="Food n Bev"
-               class="filter"
-               :class="{ active: activeFilters.includes('has_food') }"
-               @click="toggleFilter('has_food')"
-            />
-            <span class="custom-tooltip">Food n Bev?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Proximity.png"
-               alt="On-Campus?"
-               class="filter"
-               :class="{ active: activeFilters.includes('on_campus') }"
-               @click="toggleFilter('on_campus')"
-            />
-            <span class="custom-tooltip">On Campus?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Printer.png"
-               alt="Printing"
-               class="filter"
-               :class="{ active: activeFilters.includes('has_printing') }"
-               @click="toggleFilter('has_printing')"
-            />
-            <span class="custom-tooltip">Printing?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Prayer.png"
-               alt="Prayer"
-               class="filter"
-               :class="{ active: activeFilters.includes('has_prayer_space') }"
-               @click="toggleFilter('has_prayer_space')"
-            />
-            <span class="custom-tooltip">Interfaith Room?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Capacity.png"
-               alt="Plenty'a Space"
-               class="filter"
-               :class="{ active: activeFilters.includes('has_spacious_seating') }"
-               @click="toggleFilter('has_spacious_seating')"
-            />
-            <span class="custom-tooltip">Plenty'a Space?</span>
-          </div>
-          <div class="tooltip-wrapper">
-            <img src="/filters/Filter_Meeting.png"
-               alt="Meetings"
-               class="filter"
-               :class="{ active: activeFilters.includes('has_meeting_rooms') }"
-               @click="toggleFilter('has_meeting_rooms')"
-            />
-            <span class="custom-tooltip">Meetings?</span>
+          <div class="tooltip-wrapper"
+               v-for="filter in filterOptions"
+               :key="filter.key">
+            <img :src="filter.icon"
+                 :alt="filter.label"
+                 class="filter"
+                 :class="{ active: activeFilters?.includes(filter.key) }"
+                 @click="toggleFilter(filter.key)" />
+            <span class="custom-tooltip">{{ filter.label }}</span>
           </div>
         </aside>
       </div>
 
+      <!-- Main Content -->
       <div class="left-margin">
         <main class="main-content">
           <h1 class="title">the Hub</h1>
           <div class="day-selector">
             <div v-for="(day, index) in days" :key="index" class="day-item">
               <img :src="`/icons/Calendar_${day}.png`"
-                   :alt="day" class="calendar-icon"
+                   :alt="day"
+                   class="calendar-icon"
                    @click="selectedDay = day"
                    :class="{ active: selectedDay === day }" />
             </div>
@@ -151,39 +97,38 @@
 
           <div class="listing-box" v-for="listing in filteredListings" :key="listing.id">
             <div class="listing-image-wrapper">
-              <img :src="`/images/${listing.default_img_url}`"
-                   :alt="listing.image"
-                    class="listing-image" />
+              <img :src="'/images/' + listing.default_img" alt="listing image" class="listing-image" />
             </div>
-              <div class="listing-content-wrapper">
-                <div class="listing-header">
-                  <p class="listing-title" @click="goToReviews(listing.id)">
-                    {{ listing.name }}
-                  </p>
-                  <img
-                    :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
-                    alt="Favourite"
-                    class="favourite-icon"
-                    @click="toggleFavourite(listing.id)"
-                  />
+            <div class="listing-content-wrapper">
+              <div class="listing-header">
+                <p class="listing-title" @click="goToReviews(listing.id)">{{ listing.name }}</p>
+                <img :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
+                     alt="Favourite"
+                     class="favourite-icon"
+                     @click="toggleFavourite(listing.id)" />
+              </div>
+              <p class="listing-address">
+                {{ listing.address }} • {{ formatOpeningHours(listing, selectedDay) }}
+              </p>
+              <div class="listing-footer-wrapper">
+                <div class="listing-tags">
+                  <span
+                      v-for="tag in (listing.tags || []).slice().sort((a, b) => a.localeCompare(b))"
+                      :key="tag"
+                      class="tag"
+                      :class="tagColors[tag]"
+                  >
+                    {{ tag }}
+                  </span>
                 </div>
-                <p class="listing-address">{{ listing.address }} • {{ listing.opening_hours[selectedDay] }}</p>
-                <div class="listing-footer-wrapper">
-                  <div class="listing-tags">
-                    <span class="tag pink">courtyard</span>
-                    <span class="tag blue">student dealz</span>
-                    <span class="tag orange">quiet</span>
-                    <span class="tag green">car parking</span>
-                  </div>
-                  <div class="listing-rating">
-                    <img v-for="(i) in getStarIcons(listing.rating)"
-                       :key="i"
-                       src="/icons/Star.png"
+                <div class="listing-rating">
+                  <img v-for="(icon, i) in getStarIcons(listing.rating)"
+                       :key="i" :src="icon"
                        class="star-icon"
                        alt="rating star" />
-                  </div>
                 </div>
               </div>
+            </div>
           </div>
         </main>
       </div>
@@ -192,105 +137,150 @@
 </template>
 
 <script setup>
-
-import { ref, computed, onMounted } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import { useRouter } from 'vue-router';
 import '@/assets/global.css';
-import {allListings} from "@/store/favourites";
-const listings = ref([]);
+import { tagColors } from '@/constants/Tags.js';
+import { loginWithGoogle } from '@/services/authService';
+import { useAuthStatus } from '@/store/authStatus';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+
+const { isLoggedIn, setLoggedIn } = useAuthStatus();
+const router = useRouter();
+const goToReviews = (id) => router.push(`/reviews/${id}`);
+const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
+function handleProfileClick() {
+  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
+}
+
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+const selectedDay = ref(currentDay.value); // default today, but user can change it
+
+const navigateTo = (path) => (window.location.href = path);
 const showDropdown = ref(false);
 const toggleDropdown = () => (showDropdown.value = !showDropdown.value);
-const navigateTo = (path) => (window.location.href = path);
+
 const searchQuery = ref('');
-const selectedDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+
 const favourites = ref(new Set(JSON.parse(localStorage.getItem('favourites') || '[]')));
+const topTagsPerSpot = ref({});
+
+const filterOptions = [
+  { key: 'has_outlets', icon: '/filters/Filter_Outlet.png', label: 'Outlets?' },
+  { key: 'has_food', icon: '/filters/Filter_Food.png', label: 'Food n Bev?' },
+  { key: 'on_campus', icon: '/filters/Filter_Proximity.png', label: 'On Campus?' },
+  { key: 'has_printing', icon: '/filters/Filter_Printer.png', label: 'Printing?' },
+  { key: 'has_prayer_space', icon: '/filters/Filter_Prayer.png', label: 'Interfaith Room?' },
+  { key: 'has_spacious_seating', icon: '/filters/Filter_Capacity.png', label: "Plenty'a Space?" },
+  { key: 'has_meeting_rooms', icon: '/filters/Filter_Meeting.png', label: 'Meetings?' },
+];
 const activeFilters = ref([]);
-const router = useRouter();
-const goToReviews = (id) => {
-  router.push(`/reviews/${id}`);
-};
 
 const toggleFilter = (filterKey) => {
   const index = activeFilters.value.indexOf(filterKey);
-  if (index > -1) {
-    activeFilters.value.splice(index, 1);
-  } else {
-    activeFilters.value.push(filterKey);
-  }
+  index > -1 ? activeFilters.value.splice(index, 1) : activeFilters.value.push(filterKey);
 };
-
-const filteredListings = computed(() => {
-  return listings.value.filter((listing) => {
-    const nameMatches = listing.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const filterMatches =
-      activeFilters.value.length === 0 ||
-      activeFilters.value.every((filter) => listing[filter] === 'Yes');
-    return nameMatches && filterMatches;
-  });
-});
-
 const toggleFavourite = (id) => {
-  if (favourites.value.has(id)) {
-    favourites.value.delete(id);
-  } else {
-    favourites.value.add(id);
-  }
+  favourites.value.has(id) ? favourites.value.delete(id) : favourites.value.add(id);
   localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
 };
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+function secondsToHHMM(seconds) {
+  const date = new Date(seconds * 1000);
+  return date.toISOString().substring(11, 16); // "HH:MM"
+}
+
+function formatOpeningHours(listing, selectedDay) {
+  const hours = listing.hours?.[selectedDay];
+  if (!hours) return 'Closed';
+  return `${hours.opens}-${hours.closes}`;
+}
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://127.0.0.1:8000/spots');
-    const rawData = await res.json();
-    const mapped = rawData.map((spot) => ({
-      id: spot.spot_id,
-      name: spot.spot_name,
-      address: spot.address,
-      rating: parseFloat(spot.average_rating) || 0,
-      default_img_url: spot.default_img_url,
-      opening_hours: {
-        Monday: '07:00–20:00',
-        Tuesday: '07:00–20:00',
-        Wednesday: '07:00–20:00',
-        Thursday: '07:00–20:00',
-        Friday: '07:00–17:00',
-        Saturday: '10:00–16:00',
-        Sunday: '10:00–16:00',
-      },
-      has_outlets: spot.has_outlets,
-      has_food: spot.has_food,
-      has_printing: spot.has_printing,
-      has_prayer_space: spot.has_prayer_space,
-      has_spacious_seating: spot.has_spacious_seating,
-      has_meeting_rooms: spot.has_meeting_rooms,
-      on_campus: spot.on_campus,
-    }));
+    const spotsRes = await fetch('http://127.0.0.1:8000/study_spots');
+    const spotsData = await spotsRes.json();
 
-    listings.value = mapped;
-    allListings.value = mapped;
+    // Group spots and hours
+    const spotMap = {};
+
+    for (const row of spotsData.data) {
+      const spot_id = row.spot_id;
+
+      if (!spotMap[spot_id]) {
+        spotMap[spot_id] = {
+          id: spot_id,
+          name: row.spot_name,
+          address: row.address,
+          default_img: row.default_img,
+          rating: parseFloat(row.avg_rating) || 0,
+          has_outlets: row.has_outlets === 1 || row.has_outlets === "Yes",
+          has_food: row.has_food === 1 || row.has_food === "Yes",
+          has_printing: row.has_printing === 1 || row.has_printing === "Yes",
+          has_prayer_space: row.has_prayer_space === 1 || row.has_prayer_space === "Yes",
+          has_spacious_seating: row.has_spacious_seating === 1 || row.has_spacious_seating === "Yes",
+          has_meeting_rooms: row.has_meeting_rooms === 1 || row.has_meeting_rooms === "Yes",
+          on_campus: row.on_campus === 1 || row.on_campus === "Yes",
+          hours: {}
+        };
+      }
+
+      // Add each day's hours
+      if (row.day !== null) {
+        spotMap[spot_id].hours[row.day] = {
+          opens: secondsToHHMM(row.opens),
+          closes: secondsToHHMM(row.closes),
+        };
+      }
+    }
+
+    // Convert the grouped spots into a list
+    allListings.value = Object.values(spotMap);
+
+    fetch('http://127.0.0.1:8000/study_spots/top_tags')
+      .then(res => res.json())
+      .then(data => {
+        topTagsPerSpot.value = data.data;
+        allListings.value = allListings.value.map(listing => ({
+          ...listing,
+          tags: topTagsPerSpot.value[listing.id] || []
+        }));
+      });
+
   } catch (err) {
-    console.error('Failed to fetch listings:', err);
+    console.error("Data fetch failed:", err);
   }
 });
 
-const getStarIcons = (rating) => {
-  const stars = [];
-  const fullStar = '/icons/star_full.png';
-  const halfStar = '/icons/star_half.png';
-  const emptyStar = '/icons/star_empty.png';
+const allListings = ref([]);
+const filteredListings = computed(() => {
+  return allListings.value
+    .filter((spot) => {
+      const dayHours = spot.hours[selectedDay.value];
+      return dayHours && dayHours.opens !== '00:00:00' && dayHours.closes !== '00:00:00';
+    })
+    .filter((listing) => {
+      const nameMatches = listing.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
+      const filterMatches =
+        activeFilters.value.length === 0 ||
+        activeFilters.value.every((filter) => listing[filter]);
+      return nameMatches && filterMatches;
+    });
+});
 
+const getStarIcons = (rating) => {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   const empty = 5 - full - (half ? 1 : 0);
-
-  for (let i = 0; i < full; i++) stars.push(fullStar);
-  if (half) stars.push(halfStar);
-  for (let i = 0; i < empty; i++) stars.push(emptyStar);
-
-  return stars;
+  return [
+    ...Array(full).fill('/icons/Full_Star.png'),
+    ...(half ? ['/icons/Half_Star.png'] : []),
+    ...Array(empty).fill('/icons/Star.png')
+  ];
 };
+
 </script>
 
 <style>
@@ -381,7 +371,7 @@ const getStarIcons = (rating) => {
   height: 78px;
   object-fit: contain;
   cursor: pointer;
-  margin-bottom: 18px;
+  margin-bottom: 15px;
 }
 
 .filter.active {
@@ -494,8 +484,8 @@ const getStarIcons = (rating) => {
 
 .star-icon {
   object-fit: contain;
-  width: 45px;
-  height: 45px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   margin: 0 2px;
   cursor: auto;
