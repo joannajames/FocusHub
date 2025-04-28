@@ -42,11 +42,76 @@
         <h1 class="title">profile</h1>
 
         <div class="card profile-card user-card">
-          <img src="/images/Anastasia.jpg" alt="Anastasia" class="avatar" />
+          <img
+              :src="profilePicture"
+              alt="Profile Picture"
+              class="avatar"
+              @click="triggerFileInput"
+          />
+          <input
+              type="file"
+              accept="image/*"
+              ref="fileInput"
+              @change="handleImageUpload"
+              style="display: none;"
+          >
           <div class="info">
             <h2>
-              Anastasia
+              {{ username }}
             </h2>
+            <br>
+            <p class="grad-info" v-if="!showAcademicForm">
+              {{ academicLevel }} • {{ college }} • {{ degree }}
+              <img
+                  src="/icons/Pen.png"
+                  alt="Edit Academic Info"
+                  class="pen-icon-grad"
+                  @click="toggleAcademicForm"
+              />
+            </p>
+
+            <div v-else class="grad-wrapper">
+              <input type="text"
+                     v-model="tempAcademicLevel"
+                     placeholder="academic level..."
+                     list="academicLevels"
+                     class="grad-input" />
+              <span class="dot">•</span>
+              <input type="text"
+                     v-model="tempCollege"
+                     placeholder="college..."
+                     list="colleges"
+                     class="grad-input" />
+              <span class="dot">•</span>
+              <input type="text"
+                     v-model="tempDegree"
+                     placeholder="degree..."
+                     class="grad-input" />
+              <img src="/icons/Save.png"
+                   class="save-icon"
+                   @click="saveGradInfo" />
+
+              <datalist id="academicLevels">
+                <option value="Undergrad"></option>
+                <option value="Grad"></option>
+                <option value="PhD"></option>
+              </datalist>
+              <datalist id="colleges">
+                <option value="CAS"></option>
+                <option value="COM"></option>
+                <option value="ENG"></option>
+                <option value="MET"></option>
+                <option value="CFA"></option>
+                <option value="CGS"></option>
+                <option value="SAR"></option>
+                <option value="CDS"></option>
+                <option value="SHA"></option>
+                <option value="Pardee"></option>
+                <option value="Questrom"></option>
+                <option value="Kilachand"></option>
+                <option value="Wheelock"></option>
+              </datalist>
+            </div>
             <div class="tags">
               <span v-if="selectedTags.length === 0" class="tag pink">tell</span>
               <span v-if="selectedTags.length === 0" class="tag yellow">us</span>
@@ -99,41 +164,107 @@
 
         <div class="grid">
           <div class="left">
+
             <div class="card">
               <h3>my favourite spots:</h3>
-              <div
-                v-for="listing in favouriteSpots"
-                :key="listing.id"
-                class="listing-box"
-              >
-                <img :src="`/images/${listing.default_img_url}`"
-                   :alt="listing.image"
-                   class="image"
-                />
-                <div class="listing-content">
-                  <h3 class="listing-title">{{ listing.name }}</h3>
-                  <p class="listing-address">{{ listing.address }}</p>
-                  <div class="listing-tags">
-                    <span
-                      v-for="(tag, i) in listing.attributes"
-                      :key="i"
-                      :class="['tag', tag.color]"
-                    >
-                      {{ tag.name }}
-                    </span>
+
+              <div>
+                <div v-if="favouriteSpots.length">
+                  <div
+                      v-for="listing in favouriteSpots"
+                      :key="listing.id"
+                      class="listing-box"
+                  >
+                    <img
+                        :src="`/images/${listing.default_img}`"
+                        :alt="listing.image"
+                        class="image"
+                    />
+                    <div class="listing-content">
+                      <h3 class="listing-title">{{ listing.name }}</h3>
+                      <p class="listing-address">{{ listing.address }}</p>
+                      <div class="listing-tags">
+                        <span
+                            v-for="(tag, i) in listing.attributes"
+                            :key="i"
+                            :class="['tag', tag.color]"
+                        >
+                          {{ tag.name }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div v-else class="no-favourites">
+                  You haven't favourited any study spots yet!
                 </div>
               </div>
             </div>
 
             <div class="card">
               <h3>my reviews:</h3>
+
+              <div>
+                <div v-if="myReviews.length">
+                  <div
+                      v-for="review in myReviews"
+                      :key="review.id"
+                      class="listing-box"
+                  >
+                    <p class="listing-title">{{ review.content }}</p>
+                    <div class="stars">
+                      <img
+                          v-for="(icon, index) in getStarIcons(review.rating)"
+                          :key="index"
+                          :src="icon"
+                          class="star-icon"
+                          alt="rating star"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="no-reviews">
+                  You haven't posted any reviews yet!
+                </div>
+              </div>
             </div>
           </div>
-
           <div class="right">
             <div class="card">
               <h3>my recommended spots:</h3>
+
+              <div v-if="recommendedSpots.length">
+                <div
+                    v-for="listing in recommendedSpots"
+                    :key="listing.id"
+                    class="listing-box"
+                >
+                  <img
+                      :src="`/images/${listing.default_img}`"
+                      :alt="listing.image"
+                      class="image"
+                  />
+                  <div class="listing-content">
+                    <h3 class="listing-title">{{ listing.name }}</h3>
+                    <p class="listing-address">{{ listing.address }}</p>
+                    <div class="listing-tags">
+                      <span
+                          v-for="(tag, i) in listing.tags"
+                          :key="i"
+                          class="tag"
+                      >
+                        {{ tag }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="no-recommendations">
+                No recs yet. Tell us your study preferences to get some!
+              </div>
             </div>
           </div>
         </div>
@@ -143,7 +274,7 @@
 </template>
 
 <script setup>
-import {ref, watch} from 'vue';
+import {onMounted, ref, watch, computed} from 'vue';
 import { favouriteListings } from '@/store/favourites';
 import '@/assets/global.css';
 import {attributeTags, tagColors} from "@/constants/Tags";
@@ -161,6 +292,17 @@ const selectedTags = ref(JSON.parse(localStorage.getItem('selectedTags') || '[]'
 const studyPreferences = attributeTags;
 const tagClasses = tagColors;
 const favouriteSpots = favouriteListings;
+const username = ref(localStorage.getItem('username') || 'Name');
+const userId = localStorage.getItem('userId') || '';
+const academicLevel = ref(localStorage.getItem('academicLevel') || '');
+const college = ref(localStorage.getItem('college') || '');
+const degree = ref(localStorage.getItem('degree') || '');
+
+const showAcademicForm = ref(false);
+
+const toggleAcademicForm = () => {
+  showAcademicForm.value = !showAcademicForm.value;
+};
 
 const goToProfile = () => {
   showDropdown.value = false;
@@ -216,6 +358,101 @@ watch(isLoggedIn, (val) => {
   }
 });
 
+const profilePicture = ref(localStorage.getItem('profilePicture') || '/images/Default_Profile.png');
+const fileInput = ref();
+
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const handleImageUpload = (e) => {
+  const file = e.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        profilePicture.value = reader.result;
+        localStorage.setItem('profilePicture', reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const myReviews = ref([]);
+
+const tempAcademicLevel = ref('');
+const tempCollege = ref('');
+const tempDegree = ref('');
+
+const saveGradInfo = () => {
+  if (tempAcademicLevel.value) academicLevel.value = tempAcademicLevel.value;
+  if (tempCollege.value) college.value = tempCollege.value;
+  if (tempDegree.value) degree.value = tempDegree.value;
+
+  // Save to localStorage
+  localStorage.setItem('academicLevel', academicLevel.value);
+  localStorage.setItem('college', college.value);
+  localStorage.setItem('degree', degree.value);
+
+  showAcademicForm.value = false;
+};
+
+onMounted(async () => {
+  const storedUsername = localStorage.getItem('username')?.trim();
+  if (!storedUsername) {
+    console.error('No username found in localStorage');
+    return;
+  }
+
+  try {
+    const res = await fetch('http://127.0.0.1:8000/users');
+    const usersData = await res.json();
+    const users = usersData.data;
+
+    const matchedUser = users.find(user => user.user_name === storedUsername);
+
+    if (matchedUser) {
+      username.value = matchedUser.user_name;
+      academicLevel.value = matchedUser.academic_level || '';
+      college.value = matchedUser.bu_college || '';
+      degree.value = matchedUser.degree || '';
+    } else {
+      console.error(`No matching user found for username: ${storedUsername}`);
+    }
+  } catch (err) {
+    console.error('Failed to fetch user details:', err);
+  }
+
+  try {
+    const spotsRes = await fetch('http://127.0.0.1:8000/study_spots');
+    const spotsData = await spotsRes.json();
+    localStorage.setItem('allListings', JSON.stringify(spotsData.data));
+  } catch (error) {
+    console.error('Failed to fetch all listings:', error);
+  }
+
+  const allReviews = JSON.parse(localStorage.getItem('allReviews') || '[]');
+  myReviews.value = allReviews.filter(review => review.userId === userId);
+
+  const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+  const allListings = JSON.parse(localStorage.getItem('allListings') || '[]');
+  favouriteSpots.value = allListings.filter(listing => favourites.includes(listing.id));
+});
+
+const recommendedSpots = computed(() => {
+  const allListings = JSON.parse(localStorage.getItem('allListings') || '[]');
+
+  if (selectedTags.value.length === 0) {
+    return [];
+  }
+
+  return allListings.filter(listing => {
+    const listingTags = listing.tags || [];
+    return selectedTags.value.every(tag => listingTags.includes(tag));
+  });
+});
+
 </script>
 
 <style>
@@ -258,6 +495,13 @@ watch(isLoggedIn, (val) => {
   font-size: 14px;
 }
 
+.grad-info {
+  font-size: 17px;
+  font-family: 'Sansation Light', serif;
+  font-style: italic;
+  margin-top: -5px;
+}
+
 .avatar {
   object-fit: cover;
   width: 120px;
@@ -284,7 +528,7 @@ watch(isLoggedIn, (val) => {
 }
 
 .tag{
-  cursor: pointer;
+  cursor: default;
 }
 
 .tag.active {
@@ -294,10 +538,18 @@ watch(isLoggedIn, (val) => {
 }
 
 .pen-icon {
-  width: 35px;
-  height: 35px;
+  width: 30px;
   margin-top: -10px;
-  margin-left: 5px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.pen-icon-grad {
+  width: 30px;
+  margin-top: -5px;
+  margin-left: 10px;
+  display: inline-block;
+  vertical-align: middle;
   cursor: pointer;
 }
 
@@ -318,8 +570,46 @@ watch(isLoggedIn, (val) => {
 
 .save-icon{
   width: 40px;
-  margin-right: -5px;
+  margin-left: 15px;
   cursor: pointer;
+}
+
+.no-recommendations, .no-favourites, .no-reviews {
+  font-family: 'Victor Mono', serif;
+  font-size: 16px;
+  margin: 20px;
+  color: #555;
+  opacity: 0.8;
+}
+
+.grad-wrapper {
+  display: flex;
+  width: 655px;
+  align-items: center;
+  justify-content: center;
+  background: #fdfdba;
+  border: 2px solid black;
+  border-radius: 25px;
+}
+
+.grad-input {
+  font-family: 'Sansation Light', serif;
+  text-align: center;
+  width: 160px;
+  height: 8px;
+  padding: 20px 20px;
+  margin: 20px 10px;
+  border: 1px solid black;
+  border-radius: 50px;
+  background: #fdfde3;
+  font-style: italic;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.dot {
+  font-size: 24px;
+  margin: 0 5px;
 }
 
 </style>
