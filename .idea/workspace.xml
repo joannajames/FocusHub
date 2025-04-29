@@ -6,8 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="d986b1c3-b913-479d-83c0-4351fcb91715" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/firebase.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/firebase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/services/authService.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/authService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

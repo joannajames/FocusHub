@@ -11,7 +11,7 @@ export async function loginWithGoogle() {
 
   localStorage.setItem("username", username);
   // Send to backend to get JWT
-  const res = await fetch("https://focushub-backend-780726687923.us-east1.run.app", {
+  const res = await fetch("https://focus-hub-backend-780726687923.us-east1.run.app", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: idToken }),

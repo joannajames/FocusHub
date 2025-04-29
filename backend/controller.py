@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.logger import logger
 from pydantic import BaseModel
-from auth import get_current_user, get_current_admin, create_access_token, verify_firebase_token
+from auth import get_current_user,login_with_firebase, get_current_admin, create_access_token, verify_firebase_token
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
     get_reviews_for_spot, get_top_tags_per_spot, check_user_review, get_study_spot_by_id, check_or_add_user, \
     get_user_info_by_email
@@ -42,16 +42,7 @@ def google_login(token: str):
     jwt_token = create_access_token(data={"sub": user_info["email"]})
     return {"access_token": jwt_token, "token_type": "bearer"}
 
-# User Login - Generates JWT Token
-# @router.post("/token")
-# def login(email: str):
-#     # No password check anymore, trust Firebase for authentication
-#     if not email.endswith("@bu.edu"):
-#         raise HTTPException(status_code=403, detail="Only BU emails allowed.")
-#
-#     access_token = create_access_token(data={"sub": email}, expires_delta=timedelta(minutes=60))
-#     return {"access_token": access_token, "token_type": "bearer"}
-from auth import login_with_firebase
+
 
 @router.post("/token")
 def login(firebase_token: str):
@@ -59,28 +50,16 @@ def login(firebase_token: str):
 
 
 @router.get("/users/me")
-def get_my_profile(user: dict = Depends(get_current_user)):
-
-    check_or_add_user(user["email"])
-
-    user_info = get_user_info_by_email(user["email"])
-
-    if not user_info:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    is_new_user = (
-            not user_info.get("degree") or
-            not user_info.get("academic_level") or
-            not user_info.get("bu_college")
-    )
-
+def get_my_profile(current: dict = Depends(get_current_user)):
+    user = get_user_info_by_email(current["email"])
+    if not user:
+        raise HTTPException(404, "User not found")
+    is_new = not (user.get("degree") and user.get("academic_level") and user.get("bu_college"))
     return {
-        "user_id": user_info["user_id"],
-        "is_new_user": is_new_user,
-        "user_info": user_info
+      "user_id":    user["user_id"],
+      "is_new_user": is_new,
+      "user_info":  user
     }
-
-
 
 @router.post("/users/{user_id}/complete_profile")
 def complete_user_profile(user_id: int,
@@ -200,12 +179,29 @@ def remove_study_spot(spot_id: int, user: dict = Depends(get_current_admin)):
 
 
 #Reviews
-# Submit a review (User only)
+# # Submit a review (User only)
+# @router.post("/reviews")
+# def create_review(spot_id: int, rating: int, review_content: str, user: dict = Depends(get_current_user)):
+#     user_email = user["email"]
+#     user_info = get_user_info_by_email(user_email)
+#     user_id = user_info["user_id"]
+#     return add_review(user_id, spot_id, rating, review_content)
+
 @router.post("/reviews")
-def create_review(spot_id: int, rating: int, review_content: str, user: dict = Depends(get_current_user)):
-    user_email = user["email"]
-    user_info = get_user_info_by_email(user_email)
-    user_id = user_info["user_id"]
+def create_review(
+    spot_id: int,
+    rating: int,
+    review_content: str,
+    user: dict = Depends(get_current_user)
+):
+    # 1) Ensure fresh row exists
+    user_id = user["user_id"]
+
+    # 2) Prevent duplicates
+    if check_user_review(user_id, spot_id):
+        raise HTTPException(400, "You’ve already reviewed this spot")
+
+    # 3) Insert
     return add_review(user_id, spot_id, rating, review_content)
 
 # Get reviews for a specific study spot (Public)
@@ -213,9 +209,10 @@ def create_review(spot_id: int, rating: int, review_content: str, user: dict = D
 def read_reviews(spot_id: int):
     return {"data": get_reviews_for_spot(spot_id)}
 
-@router.get("/reviews/{spot_id}/user/{user_id}")
-def check_if_user_reviewed(spot_id: int, user_id: int):
-    if check_user_review(user_id, spot_id):
-        return {"message": "Review exists"}
-    else:
-        raise HTTPException(status_code=404, detail="No review found")
+@router.get("/reviews/{spot_id}/exists")
+def check_if_user_reviewed_spot(
+    spot_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    exists = check_user_review(current_user["user_id"], spot_id)   # :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
+    return {"review_exists": exists}

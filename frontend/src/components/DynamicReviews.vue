@@ -550,23 +550,35 @@ const checkIfCanSubmit = async () => {
     return;
   }
 
-  user_id.value = localStorage.getItem('user_id');
-  if (!user_id.value) {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
     showLoginPopup.value = true;
     return;
   }
 
   try {
-    const response = await apiFetch(`/reviews/${spot_id}/user/${user_id.value}`);
-    if (response.ok) {
-      alreadyReviewedPopup.value = true;
-    } else if (response.status === 404) {
-      showForm.value = true;
-    } else {
-      console.error('Unexpected server response:', response.status);
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      showLoginPopup.value = true;
+      return;
     }
+    const { review_exists } = await apiFetch(
+      `/reviews/${spot_id}/exists`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (review_exists) {
+      alreadyReviewedPopup.value = true;
+    } else {
+      showForm.value = true;
+    }
+
   } catch (err) {
-    console.error('Error checking if review exists:', err);
+    console.error('Error checking review exists:', err);
   }
 };
 
