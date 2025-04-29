@@ -10,9 +10,8 @@ export async function loginWithGoogle() {
   const username = email.split('@')[0];
 
   localStorage.setItem("username", username);
-
   // Send to backend to get JWT
-  const res = await fetch("http://localhost:8000/auth/google", {
+  const res = await fetch("https://focushub-backend-780726687923.us-east1.run.app", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: idToken }),

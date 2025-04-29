@@ -65,14 +65,6 @@
         </div>
       </header>
 
-        <div v-if="showCompleteProfilePopup" class="login-popup">
-          <div class="popup-content">
-            Please complete your profile!
-            <br><br>
-            <button @click="goToCompleteProfileForm">Fill Profile</button>
-          </div>
-        </div>
-
       <!-- Sidebar Filters -->
       <div class="fixed-left-column">
         <aside class="sidebar">
@@ -148,7 +140,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import '@/assets/global.css';
 import { tagColors } from '@/constants/Tags.js';
@@ -157,54 +149,30 @@ import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { apiFetch } from '@/services/api';
-import axios from 'axios';
 
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const router = useRouter();
 const goToReviews = (id) => router.push(`/reviews/${id}`);
 const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
-async function handleProfileClick() {
-  if (isLoggedIn.value) {
-    await signOut(auth);
-    setLoggedIn(false);
-  } else {
-    const userCredential = await loginWithGoogle();
-    const email = userCredential.user.email;
-
-    const tokenResponse = await axios.post('/token', { email: email });
-    const token = tokenResponse.data.access_token;
-    localStorage.setItem('token', token);
-    setLoggedIn(true);
-
-    const profileResponse = await axios.get('/users/me', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (profileResponse.data.is_new_user) {
-      openCompleteProfilePopup(profileResponse.data.user_id);
-    } else {
-      router.push('/');
-    }
-  }
+function handleProfileClick() {
+  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
 }
+
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+const selectedDay = ref(currentDay.value);
 
 const secondsToHHMM = (seconds) => {
   const date = new Date(seconds * 1000);
   return date.toISOString().substring(11, 16); // "HH:MM"
 };
 
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
-const selectedDay = ref(currentDay.value); // default today, but user can change it
 
 const navigateTo = (path) => (window.location.href = path);
 const showDropdown = ref(false);
 const toggleDropdown = () => (showDropdown.value = !showDropdown.value);
 
 const searchQuery = ref('');
-
 const favourites = ref(new Set(JSON.parse(localStorage.getItem('favourites') || '[]')));
 const topTagsPerSpot = ref({});
 
@@ -223,6 +191,7 @@ const toggleFilter = (filterKey) => {
   const index = activeFilters.value.indexOf(filterKey);
   index > -1 ? activeFilters.value.splice(index, 1) : activeFilters.value.push(filterKey);
 };
+
 const toggleFavourite = (id) => {
   favourites.value.has(id) ? favourites.value.delete(id) : favourites.value.add(id);
   localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
@@ -304,26 +273,10 @@ function getOpenStatus(listing, selectedDay) {
   }
 }
 
-const showCompleteProfilePopup = ref(false);
-const completeProfileUserId = ref(null);
-
-function openCompleteProfilePopup(userId) {
-  showCompleteProfilePopup.value = true;
-  completeProfileUserId.value = userId;
-}
-
-function goToCompleteProfileForm() {
-  showCompleteProfilePopup.value = false;
-  router.push('/profile');  // or wherever you want them to fill in their profile
-}
-
-
-
 onMounted(async () => {
   try {
-    const spotsData = await apiFetch('/study_spots');
+    const spotsData = await apiFetch(`/study_spots?weekday=${selectedDay.value}`);
 
-    // Group spots and hours
     const spotMap = {};
 
     for (const row of spotsData.data) {
@@ -356,15 +309,16 @@ onMounted(async () => {
       }
     }
 
-    // Convert the grouped spots into a list
     allListings.value = Object.values(spotMap);
 
-    const tagsData = await apiFetch('/study_spots/top_tags');
-    topTagsPerSpot.value = tagsData.data;
+    const topTagsData = await apiFetch('/study_spots/top_tags');
+    topTagsPerSpot.value = topTagsData.data;
+
     allListings.value = allListings.value.map(listing => ({
-        ...listing,
-        tags: topTagsPerSpot.value[listing.id] || []
+      ...listing,
+      tags: topTagsPerSpot.value[listing.id] || []
     }));
+
   } catch (err) {
     console.error("Data fetch failed:", err);
   }
@@ -396,8 +350,8 @@ const getStarIcons = (rating) => {
     ...Array(empty).fill('/icons/Star.png')
   ];
 };
-
 </script>
+
 
 <style>
 
@@ -574,23 +528,6 @@ const getStarIcons = (rating) => {
   letter-spacing: 1px;
 }
 
-.listing-status {
-  margin: 5px 25px;
-  font-size: 16px;
-  font-family: 'Sansation Light', serif;
-}
-
-.listing-status.open {
-  color: green;
-  font-weight: bold;
-}
-
-.listing-status.closed {
-  color: red;
-  font-weight: bold;
-}
-
-
 .listing-tags {
   display: flex;
   flex-shrink: 0;
@@ -613,6 +550,22 @@ const getStarIcons = (rating) => {
   align-items: center;
   gap: 20px;
   margin-top: 10px;
+}
+
+.listing-status {
+  margin: 5px 25px;
+  font-size: 16px;
+  font-family: 'Sansation Light', serif;
+}
+
+.listing-status.open {
+  color: green;
+  font-weight: bold;
+}
+
+.listing-status.closed {
+  color: red;
+  font-weight: bold;
 }
 
 .star-icon {

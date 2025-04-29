@@ -5,22 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d986b1c3-b913-479d-83c0-4351fcb91715" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/old_auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/backend/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/crud.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/study_spots_db_reviews.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_reviews.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChatToUs.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChatToUs.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/HomePage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HomePage.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/NotVisible.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/NotVisible.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/OurConstitution.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OurConstitution.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/TheHub.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TheHub.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/UserProfile.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/UserProfile.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/firebase.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/firebase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/services/authService.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/authService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,6 +23,11 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="Firebase_GCS_Running" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -54,13 +54,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Firebase__GCS__Running&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "Firebase__GCS__User__auth",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Joanna\FocusHub\backend" />

@@ -6,7 +6,7 @@ from fastapi import HTTPException
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+#SPOTS LOGIC
 def get_all_study_spots(
         has_outlets=None,
         has_meeting_rooms=None,
@@ -122,7 +122,7 @@ def add_study_spot(spot):
         cursor = conn.cursor()
         query = """
             INSERT INTO spots (
-                spot_name, address, open_early, open_late, has_outlets, has_food,
+                spot_name, address, has_outlets, has_food,
                 has_printing, has_prayer_space, has_spacious_seating,
                 has_meeting_rooms, on_campus, default_img_url, average_rating
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -130,8 +130,6 @@ def add_study_spot(spot):
         values = (
             spot.spot_name,
             spot.address,
-            spot.open_early,
-            spot.open_late,
             spot.has_outlets,
             spot.has_food,
             spot.has_printing,
@@ -161,8 +159,6 @@ def update_study_spot(spot_id, spot):
             UPDATE spots SET
                 spot_name = %s,
                 address = %s,
-                open_early = %s,
-                open_late = %s,
                 has_outlets = %s,
                 has_food = %s,
                 has_printing = %s,
@@ -177,8 +173,6 @@ def update_study_spot(spot_id, spot):
         values = (
             spot.spot_name,
             spot.address,
-            spot.open_early,
-            spot.open_late,
             spot.has_outlets,
             spot.has_food,
             spot.has_printing,
@@ -214,7 +208,9 @@ def delete_study_spot(spot_id):
     finally:
         cursor.close()
         conn.close()
-        
+
+
+#REVIEW LOGIC
 # Add a new review       
 def add_review(user_id, spot_id, rating, review_content, review_tags, review_img_url):
     conn = None
@@ -341,6 +337,8 @@ def check_user_review(user_id, spot_id):
         cursor.close()
         conn.close()
 
+
+#USER LOGIC
 def check_or_add_user(email: str):
     conn = None
     cursor = None
@@ -348,7 +346,6 @@ def check_or_add_user(email: str):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 🔵 Check if user exists by bu_user_id
         query = "SELECT user_id FROM users WHERE bu_user_id = %s"
         cursor.execute(query, (email,))
         user = cursor.fetchone()
@@ -357,7 +354,6 @@ def check_or_add_user(email: str):
             logger.info(f"User {email} already exists with user_id {user['user_id']}")
             return user['user_id']
         else:
-            # 🔵 Insert new user
             insert_query = """
                 INSERT INTO users (bu_user_id, user_name)
                 VALUES (%s, %s)

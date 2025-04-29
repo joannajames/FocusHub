@@ -1,9 +1,12 @@
 #Importing FastAPI, dependencies, and connection between front/backend
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from auth import get_current_user  # Authentication
+from old_auth import get_current_user  # Authentication
 from controller import router
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # Setup logging

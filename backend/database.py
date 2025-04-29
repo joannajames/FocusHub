@@ -9,7 +9,7 @@ def get_db_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         unix_socket=os.getenv("DB_HOST"),
-        database=os.getenv("DB_NAME")
+        database=os.getenv("DB_DATABASE"),
     )
     return connection
 

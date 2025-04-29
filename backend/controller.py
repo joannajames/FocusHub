@@ -1,46 +1,73 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.logger import logger
 from pydantic import BaseModel
-from auth import get_current_user, get_current_admin, create_access_token, authenticate_user, verify_google_token
+from auth import get_current_user, get_current_admin, create_access_token, verify_firebase_token
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
     get_reviews_for_spot, get_top_tags_per_spot, check_user_review, get_study_spot_by_id, check_or_add_user, \
     get_user_info_by_email
 from datetime import timedelta
 from fastapi import Path
-
+from crud import update_user_profile
 
 router = APIRouter()
 
+#Debugging
+from crud import get_db_connection
+from fastapi import APIRouter
 
+router = APIRouter()
+
+@router.get("/db_health")
+def db_health_check():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1;")
+        result = cursor.fetchone()
+        return {"status": "success", "result": result}
+    except Exception as e:
+        return {"status": "fail", "error": str(e)}
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+
+
+
+# Authorization and Authentication
 @router.post("/auth/google")
 def google_login(token: str):
-    user_info = verify_google_token(token)
+    user_info = verify_firebase_token(token)
     jwt_token = create_access_token(data={"sub": user_info["email"]})
     return {"access_token": jwt_token, "token_type": "bearer"}
 
 # User Login - Generates JWT Token
-@router.post("/token")
-def login(email: str):
-    # No password check anymore, trust Firebase for authentication
-    if not email.endswith("@bu.edu"):
-        raise HTTPException(status_code=403, detail="Only BU emails allowed.")
+# @router.post("/token")
+# def login(email: str):
+#     # No password check anymore, trust Firebase for authentication
+#     if not email.endswith("@bu.edu"):
+#         raise HTTPException(status_code=403, detail="Only BU emails allowed.")
+#
+#     access_token = create_access_token(data={"sub": email}, expires_delta=timedelta(minutes=60))
+#     return {"access_token": access_token, "token_type": "bearer"}
+from auth import login_with_firebase
 
-    access_token = create_access_token(data={"sub": email}, expires_delta=timedelta(minutes=60))
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.post("/token")
+def login(firebase_token: str):
+    return login_with_firebase(firebase_token)
 
 
 @router.get("/users/me")
 def get_my_profile(user: dict = Depends(get_current_user)):
-    # 🔵 Ensure user exists (insert if needed)
+
     check_or_add_user(user["email"])
 
-    # 🔵 Fetch full profile info
     user_info = get_user_info_by_email(user["email"])
 
     if not user_info:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # 🔵 Determine if profile is incomplete
     is_new_user = (
             not user_info.get("degree") or
             not user_info.get("academic_level") or
@@ -53,7 +80,7 @@ def get_my_profile(user: dict = Depends(get_current_user)):
         "user_info": user_info
     }
 
-from crud import update_user_profile  # import at the top
+
 
 @router.post("/users/{user_id}/complete_profile")
 def complete_user_profile(user_id: int,
@@ -63,6 +90,8 @@ def complete_user_profile(user_id: int,
     update_user_profile(user_id, degree, academic_level, bu_college)
     return {"message": "Profile updated successfully"}
 
+
+# Spots
 @router.get("/study_spots/top_tags")
 def fetch_top_tags():
     tags = get_top_tags_per_spot()
@@ -169,10 +198,15 @@ def modify_study_spot(
 def remove_study_spot(spot_id: int, user: dict = Depends(get_current_admin)):
     return delete_study_spot(spot_id)
 
+
+#Reviews
 # Submit a review (User only)
 @router.post("/reviews")
 def create_review(spot_id: int, rating: int, review_content: str, user: dict = Depends(get_current_user)):
-    return add_review(user["user_id"], spot_id, rating, review_content)
+    user_email = user["email"]
+    user_info = get_user_info_by_email(user_email)
+    user_id = user_info["user_id"]
+    return add_review(user_id, spot_id, rating, review_content)
 
 # Get reviews for a specific study spot (Public)
 @router.get("/reviews/{spot_id}")

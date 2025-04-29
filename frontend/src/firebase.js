@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDXikgKK8cKs-5WzKQuPgxESR0EWNgayG8",
   authDomain: "focushub-450719.firebaseapp.com",
   projectId: "focushub-450719",
-  storageBucket: "focushub-450719.firebasestorage.app",
+  storageBucket: "focushub-450719.appspot.com",
   messagingSenderId: "780726687923",
   appId: "1:780726687923:web:16fabd1e2bcfe6bb1ff8c6",
   measurementId: "G-KBZ4F2WCH3"
