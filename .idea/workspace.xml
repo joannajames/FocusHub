@@ -7,35 +7,7 @@
     <list default="true" id="d986b1c3-b913-479d-83c0-4351fcb91715" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/filters/Filter_Outlet.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/filters/Filter_Outlet.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_3.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Fitrec.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Fitrec.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/GSU.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/GSU.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Howard.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Howard.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Innovate.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Innovate.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/LGBTQIA.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/LGBTQIA.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Landwer.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Landwer.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Life_Alive.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Life_Alive.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Marsh_Chapel.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Marsh_Chapel.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Mugar_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Mugar_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Mugar_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Mugar_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Nero_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Nero_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Nero_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Nero_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Pavement.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Pavement.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Pavement_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Pavement_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Phinista.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Phinista.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Pickering.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Pickering.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Questrom.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Questrom.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/SandE.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/SandE.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Sipping_Room.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Sipping_Room.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Starbucks_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Starbucks_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Starbucks_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Starbucks_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Starbucks_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Starbucks_3.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Tatte_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Tatte_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/images/Tatte_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Tatte_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

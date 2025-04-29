@@ -72,7 +72,7 @@
           </div>
           <div v-if="alreadyReviewedPopup" class="already-reviewed-popup">
             <div class="popup-content">
-              Error: you’ve already posted a review for this spot
+              Error: you've already posted a review for this spot
             </div>
           </div>
 
@@ -165,27 +165,28 @@
             </form>
           </div>
 
-          <div v-if="listing" class="listing-box" :key="listing.id">
+          <div v-if="listing" class="listing-box">
             <div class="listing-image-wrapper">
-              <img :src="`/images/${listing.default_img}`"
-                   :alt="listing.image"
-                    class="listing-image" />
+              <img :src="'/images/' + listing.default_img" alt="listing image" class="listing-image" />
             </div>
               <div class="listing-content-wrapper">
                 <div class="listing-header">
-                  <p class="listing-title">{{ listing.name }}</p>
-                  <img
-                    :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
-                    alt="Favourite"
-                    class="favourite-icon"
-                    @click="toggleFavourite(listing.id)"
-                  />
+                  <p class="listing-title">{{ listing.name }}</p> <!-- No click event needed here -->
+                  <img :src="favourites.has(listing.id) ? '/icons/Full_Heart.png' : '/icons/Heart.png'"
+                       alt="Favourite"
+                       class="favourite-icon"
+                       @click="toggleFavourite(listing.id)" />
                 </div>
-                <p class="listing-address">{{ listing.address }} • {{ formatOpeningHours(listing, currentDay) }}</p>
+                <p class="listing-address">
+                  {{ listing.address }} • {{ formatOpeningHours(listing, selectedDay) }}
+                </p>
+                <p class="listing-status" :class="{ open: getOpenStatus(listing, selectedDay) === 'Open Now', closed: getOpenStatus(listing, currentDay) === 'Closed Now' }">
+                  {{ getOpenStatus(listing, selectedDay) }}
+                </p>
                 <div class="listing-footer-wrapper">
                   <div class="listing-tags">
                     <span
-                        v-for="tag in (Array.isArray(listing.tags) ? listing.tags : []).sort((a, b) => a.localeCompare(b))"
+                        v-for="tag in (listing.tags || []).slice().sort((a, b) => a.localeCompare(b))"
                         :key="tag"
                         class="tag"
                         :class="tagColors[tag]"
@@ -195,13 +196,13 @@
                   </div>
                   <div class="listing-rating">
                     <img v-for="(icon, i) in getStarIcons(listing.rating)"
-                       :key="i" :src="icon"
-                       class="star-icon"
-                       alt="rating star" />
+                         :key="i" :src="icon"
+                         class="star-icon"
+                         alt="rating star" />
                   </div>
                 </div>
               </div>
-          </div>
+            </div>
 
           <div class="reviews-section">
             <div v-for="review in reviews" :key="review.id" class="review-card">
@@ -292,7 +293,6 @@ import {loginWithGoogle} from "@/services/authService";
 import {useAuthStatus} from "@/store/authStatus";
 import { onAuthStateChanged } from 'firebase/auth';
 import { apiFetch } from '@/services/api';
-import axios from 'axios';
 
 const username = ref('Name');
 const selectedTag = ref('');
@@ -301,15 +301,93 @@ const { isLoggedIn, setLoggedIn } = useAuthStatus();
 import router from "@/router";
 const listing = ref();
 const topTagsPerSpot = ref({});
+const selectedDay = ref(''); // Added selectedDay ref
+const currentDayHours = ref(null); // Added currentDayHours ref
+const currentDay = ref(''); // Added currentDay ref
 
 function secondsToHHMM(seconds) {
   const date = new Date(seconds * 1000);
   return date.toISOString().substring(11, 16); // "HH:MM"
 }
 
+function formatOpeningHours(listing, selectedDay) {
+  const hours = listing.hours?.[selectedDay];
+  if (!hours || !hours.opens || !hours.closes) return 'Hours not available';
+
+  const formatTime = (hhmm) => {
+    if (!hhmm || typeof hhmm !== 'string' || !hhmm.includes(':')) return 'Hours not available';
+    const [hourString, minuteString] = hhmm.split(':');
+    const hour = parseInt(hourString, 10);
+    const minute = parseInt(minuteString, 10);
+    if (isNaN(hour) || isNaN(minute)) return 'Hours not available';
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${adjustedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  if (hours.opens === 'Closed' || hours.closes === 'Closed') {
+    return 'Hours not available';
+  }
+
+  const [openHour, openMinute] = hours.opens.split(':').map(Number);
+  const [closeHour, closeMinute] = hours.closes.split(':').map(Number);
+
+  if (isNaN(openHour) || isNaN(closeHour) || isNaN(openMinute) || isNaN(closeMinute)) {
+    return 'Hours not available';
+  }
+
+  const openTotalMinutes = openHour * 60 + openMinute;
+  const closeTotalMinutes = closeHour * 60 + closeMinute;
+
+  const openFormatted = formatTime(hours.opens);
+  const closeFormatted = formatTime(hours.closes);
+
+  if (closeTotalMinutes < openTotalMinutes) {
+    return `${openFormatted} - ${closeFormatted}`;
+  } else {
+    return `${openFormatted} - ${closeFormatted}`;
+  }
+}
+
+
+function getOpenStatus(listing, selectedDay) {
+  const todayHours = listing.hours?.[selectedDay];
+  if (!todayHours || !todayHours.opens || !todayHours.closes) {
+    return 'Closed Now';
+  }
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const [openHour, openMinute] = todayHours.opens.split(':').map(Number);
+  const [closeHour, closeMinute] = todayHours.closes.split(':').map(Number);
+
+  if (isNaN(openHour) || isNaN(openMinute) || isNaN(closeHour) || isNaN(closeMinute)) {
+    return 'Closed Now';
+  }
+
+  const openTotalMinutes = openHour * 60 + openMinute;
+  const closeTotalMinutes = closeHour * 60 + closeMinute;
+
+  if (closeTotalMinutes < openTotalMinutes) {
+    // Spot closes after midnight
+    if (currentMinutes >= openTotalMinutes || currentMinutes <= closeTotalMinutes) {
+      return 'Open Now';
+    } else {
+      return 'Closed Now';
+    }
+  } else {
+    // Normal same-day closing
+    if (currentMinutes >= openTotalMinutes && currentMinutes <= closeTotalMinutes) {
+      return 'Open Now';
+    } else {
+      return 'Closed Now';
+    }
+  }
+}
+
 onMounted(async () => {
   const storedUsername = localStorage.getItem('username');
-
   if (storedUsername) {
     username.value = storedUsername;
     console.log(username.value);
@@ -320,36 +398,66 @@ onMounted(async () => {
     user_id.value = storedUserId;
   }
 
-
   try {
-    const spotData = await apiFetch(`/study_spots/${spot_id}`);
-    const spot = spotData.data;
+    // Get the current day of the week
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    currentDay.value = daysOfWeek[new Date().getDay()];
+    selectedDay.value = currentDay.value; // Set the selected day to current day
 
+    // Fetch specific study spot by ID
+    const spotsData = await apiFetch(`/study_spots/${spot_id}`);
+
+    if (!spotsData.data || spotsData.data.length === 0) {
+      console.error('No spot found for this spot_id');
+      return;
+    }
+
+    // Find the data for the current day
+    let currentDayData = spotsData.data.find(dayInfo => dayInfo.day === selectedDay.value);
+
+    if (!currentDayData) {
+      console.error(`No data found for ${selectedDay.value}`);
+      // Fallback to the first entry if current day not found
+      currentDayData = spotsData.data[0];
+    }
+
+    // Create the listing object with the current day's information
     listing.value = {
-      id: spot.spot_id,
-      name: spot.spot_name,
-      address: spot.address,
-      default_img: spot.default_img,
-      rating: parseFloat(spot.avg_rating) || 0,
-      has_outlets: spot.has_outlets === 1 || spot.has_outlets === "Yes",
-      has_food: spot.has_food === 1 || spot.has_food === "Yes",
-      has_printing: spot.has_printing === 1 || spot.has_printing === "Yes",
-      has_prayer_space: spot.has_prayer_space === 1 || spot.has_prayer_space === "Yes",
-      has_spacious_seating: spot.has_spacious_seating === 1 || spot.has_spacious_seating === "Yes",
-      has_meeting_rooms: spot.has_meeting_rooms === 1 || spot.has_meeting_rooms === "Yes",
-      on_campus: spot.on_campus === 1 || spot.on_campus === "Yes",
-      hours: (spot.hours || []).reduce((acc, hour) => {
-        acc[hour.day] = {
-          opens: secondsToHHMM(hour.opens),
-          closes: secondsToHHMM(hour.closes),
-        };
-        return acc;
-      }, {})
+      id: currentDayData.spot_id,
+      name: currentDayData.spot_name,
+      address: currentDayData.address,
+      default_img: currentDayData.default_img,
+      rating: parseFloat(currentDayData.avg_rating) || 0,
+      has_outlets: currentDayData.has_outlets === 1 || currentDayData.has_outlets === "Yes",
+      has_food: currentDayData.has_food === 1 || currentDayData.has_food === "Yes",
+      has_printing: currentDayData.has_printing === 1 || currentDayData.has_printing === "Yes",
+      has_prayer_space: currentDayData.has_prayer_space === 1 || currentDayData.has_prayer_space === "Yes",
+      has_spacious_seating: currentDayData.has_spacious_seating === 1 || currentDayData.has_spacious_seating === "Yes",
+      has_meeting_rooms: currentDayData.has_meeting_rooms === 1 || currentDayData.has_meeting_rooms === "Yes",
+      on_campus: currentDayData.on_campus === 1 || currentDayData.on_campus === "Yes",
+      hours: {}
     };
 
-    // Fetch the top tags separately (optional if you want them per listing)
-    const tagsData = await apiFetch(`/study_spots/top_tags`);
-    topTagsPerSpot.value = tagsData.data;
+    // Process hours for all days from the response
+    spotsData.data.forEach(dayInfo => {
+      if (dayInfo.day && dayInfo.open_time && dayInfo.close_time) {
+        listing.value.hours[dayInfo.day] = {
+          opens: secondsToHHMM(dayInfo.open_time),
+          closes: secondsToHHMM(dayInfo.close_time)
+        };
+      }
+    });
+
+    // Highlight the current day's hours for easy access
+    const currentHours = listing.value.hours[selectedDay.value];
+    if (currentHours) {
+      // You could store these separately if needed
+      currentDayHours.value = currentHours;
+    }
+
+
+    const topTagsData = await apiFetch('/study_spots/top_tags');
+    topTagsPerSpot.value = topTagsData.data;
     listing.value.tags = topTagsPerSpot.value[listing.value.id] || [];
 
     const reviewsData = await apiFetch(`/reviews/${spot_id}`);
@@ -369,27 +477,21 @@ onMounted(async () => {
     }));
 
     onAuthStateChanged(auth, (user) => {
-  if (user) {
-    isLoggedIn.value = true;
-    localStorage.setItem('user_id', user.uid);
-    user_id.value = user.uid;
-  } else {
-    isLoggedIn.value = false;
-    localStorage.removeItem('user_id');
-    user_id.value = null;
-  }
-});
+      if (user) {
+        isLoggedIn.value = true;
+        localStorage.setItem('user_id', user.uid);
+        user_id.value = user.uid;
+      } else {
+        isLoggedIn.value = false;
+        localStorage.removeItem('user_id');
+        user_id.value = null;
+      }
+    });
 
   } catch (err) {
     console.error("Data fetch failed:", err);
   }
 });
-
-function formatOpeningHours(listing, currentDay) {
-  const hours = listing.hours?.[currentDay];
-  if (!hours) return 'Closed';
-  return `${hours.opens}-${hours.closes}`;
-}
 
 const goToProfile = () => {
   showDropdown.value = false;
@@ -536,7 +638,6 @@ const toggleFlag = (reviewId) => {
 
 const spotPreferences = attributeTags;
 const tagClasses = tagColors;
-const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
 const showPreferenceCard = ref(false);
 
 const reviewTagsKey = `reviewTags-${spot_id}`;
@@ -605,14 +706,23 @@ async function handleProfileClick() {
     const userCredential = await loginWithGoogle();
     const email = userCredential.user.email;
 
-    const tokenResponse = await axios.post('/token', { email: email });
+    // Get the token
+    const tokenResponse = await apiFetch('/token', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
     const token = tokenResponse.data.access_token;
     localStorage.setItem('token', token);
     setLoggedIn(true);
 
-    const profileResponse = await axios.get('/users/me', {
+    // Get the user profile
+    const profileResponse = await apiFetch('/users/me', {
       headers: {
-        Authorization: `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       }
     });
 
