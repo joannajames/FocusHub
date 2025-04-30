@@ -47,7 +47,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'jojames@bu.edu','jojames',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Backend Developer'),(2,'cmphilip@bu.edu','cmphilip','christal.jpeg','aesthetic, h2o stations, indie (non-chain), low traffic, smiley service','CS673, CS662','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Database Manager'),(3,'zara87@bu.edu','zara87',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Security Specialist'),(4,'rdhoda@bu.edu','rdhoda',NULL,NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Frontend Developer');
+INSERT INTO `users` VALUES (1,'jojames@bu.edu','jojames','joanna.jpeg',NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-28 19:16:29',1,'Backend Developer'),(2,'cmphilip@bu.edu','cmphilip','christal.jpeg','Aesthetic, H2O Stations, Indie (Non-Chain), Low Traffic, Smiley Service','CS673, CS662','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-19 21:00:52',1,'Database Manager'),(3,'zara87@bu.edu','zara87','zahra.jpeg',NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-28 19:16:39',1,'Security Specialist'),(4,'rdhoda@bu.edu','rdhodha','raessa.jpeg',NULL,'CS673','MET','Computer Science','Grad','2025-04-19 21:00:52','2025-04-28 19:16:47',1,'Frontend Developer');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -60,4 +60,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-20 16:33:09
+-- Dump completed on 2025-04-28 21:17:03

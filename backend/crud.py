@@ -209,6 +209,127 @@ def delete_study_spot(spot_id):
         cursor.close()
         conn.close()
 
+# FAVOURITES AND FLAGS LOGIC:
+
+def get_user_favorites(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+            SELECT DISTINCT s.spot_id, s.spot_name, s.address, s.default_img
+            FROM favourites f
+            JOIN spots s ON f.spot_id = s.spot_id
+            WHERE f.user_id = %s
+        """
+
+        cursor.execute(query, (user_id,))
+        results = cursor.fetchall()
+        return results if results else []
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch favorites")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+def add_favorite(user_id, spot_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "INSERT INTO favourites (user_id, spot_id) VALUES (%s, %s)"
+        cursor.execute(query, (user_id, spot_id))
+        conn.commit()
+        return {"message": "Favorite added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to add favorite")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_favorite(user_id, spot_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM favourites WHERE user_id = %s AND spot_id = %s"
+        cursor.execute(query, (user_id, spot_id))
+        conn.commit()
+        return {"message": "Favorite removed"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to remove favorite")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# Add a flag entry for a specific study spot by a user
+def add_flag(user_id, spot_id, reason):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO flags (user_id, spot_id, reason)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(query, (user_id, spot_id, reason))
+        conn.commit()
+        return {"message": "Flag submitted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# Retrieve all flags associated with a specific study spot
+def get_flags_for_spot(spot_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM flags WHERE spot_id = %s ORDER BY timestamp DESC"
+        cursor.execute(query, (spot_id,))
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        cursor.close()
+        conn.close()
+
+#Pictures
+# Update profile picture path for a user
+def update_profile_picture(user_id, img_path):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "UPDATE users SET profile_img = %s WHERE user_id = %s"
+        cursor.execute(query, (img_path, user_id))
+        conn.commit()
+        return {"message": "Profile image updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to update profile image")
+    finally:
+        cursor.close()
+        conn.close()
+
+# Get profile picture path for a user
+def get_profile_picture(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT profile_img FROM users WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return {"profile_img": result["profile_img"]}
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch profile image")
+    finally:
+        cursor.close()
+        conn.close()
 
 #REVIEW LOGIC
 # Add a new review       
@@ -334,6 +455,33 @@ def check_user_review(user_id, spot_id):
     finally:
         cursor.close()
         conn.close()
+def get_reviews_by_user(user_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+            SELECT 
+            r.review_id,
+            r.review_content AS content,
+            r.rating,
+            r.timestamp,
+            s.spot_name
+        FROM reviews r
+        JOIN spots s ON r.spot_id = s.spot_id
+        WHERE r.user_id = %s
+        ORDER BY r.timestamp DESC;
+        """
+        cursor.execute(query, (user_id,))
+        return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching user reviews: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 #USER LOGIC
@@ -350,16 +498,16 @@ def check_or_add_user(email: str):
 
         if user:
             logger.info(f"User {email} already exists with user_id {user['user_id']}")
-            return user['user_id']
+            return user['user_id'], False  # Not new
         else:
             insert_query = """
                 INSERT INTO users (bu_user_id, user_name)
                 VALUES (%s, %s)
             """
-            cursor.execute(insert_query, (email, email))  # same email for both fields initially
+            cursor.execute(insert_query, (email, email))
             conn.commit()
             logger.info(f"New user {email} added with user_id {cursor.lastrowid}")
-            return cursor.lastrowid
+            return cursor.lastrowid, True  # Newly added
 
     except Exception as e:
         logger.error(f"Error checking or adding user: {e}")
@@ -369,7 +517,8 @@ def check_or_add_user(email: str):
             cursor.close()
         if conn:
             conn.close()
-def update_user_profile(user_id: int, degree: str, academic_level: str, bu_college: str):
+
+def update_user_profile(user_id: int, degree: str, academic_level: str, bu_college: str, personal_tags: str = None):
     conn = None
     cursor = None
     try:
@@ -380,10 +529,11 @@ def update_user_profile(user_id: int, degree: str, academic_level: str, bu_colle
             UPDATE users
             SET degree = %s,
                 academic_level = %s,
-                bu_college = %s
+                bu_college = %s,
+                personal_tags = %s
             WHERE user_id = %s
         """
-        values = (degree, academic_level, bu_college, user_id)
+        values = (degree, academic_level, bu_college, personal_tags, user_id)
         cursor.execute(query, values)
         conn.commit()
     except Exception as e:
@@ -394,6 +544,7 @@ def update_user_profile(user_id: int, degree: str, academic_level: str, bu_colle
             cursor.close()
         if conn:
             conn.close()
+
 
 def get_user_info_by_email(email: str):
     conn = None

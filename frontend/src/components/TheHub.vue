@@ -146,9 +146,11 @@ import '@/assets/global.css';
 import { tagColors } from '@/constants/Tags.js';
 import { loginWithGoogle } from '@/services/authService';
 import { useAuthStatus } from '@/store/authStatus';
+
 import { auth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { apiFetch } from '@/services/api';
+const userId = ref(null);
 
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const router = useRouter();
@@ -161,15 +163,17 @@ async function handleProfileClick() {
     setLoggedIn(false);
     return;
   }
-
-  // 1) Sign in with Google
   await loginWithGoogle();
 
   setLoggedIn(true);
 
-  // 2) Fetch (and auto-create) the user record
-  await apiFetch('/users/me');
-  router.push('/');
+  const response = await apiFetch('/users/me');
+  const { is_new_user } = response;
+  if (is_new_user) {
+      router.push('/profile');
+  } else {
+      router.push('/the_hub');
+  }
 }
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
@@ -186,7 +190,7 @@ const showDropdown = ref(false);
 const toggleDropdown = () => (showDropdown.value = !showDropdown.value);
 
 const searchQuery = ref('');
-const favourites = ref(new Set(JSON.parse(localStorage.getItem('favourites') || '[]')));
+const favourites = ref(new Set());
 const topTagsPerSpot = ref({});
 
 const filterOptions = [
@@ -205,9 +209,24 @@ const toggleFilter = (filterKey) => {
   index > -1 ? activeFilters.value.splice(index, 1) : activeFilters.value.push(filterKey);
 };
 
-const toggleFavourite = (id) => {
-  favourites.value.has(id) ? favourites.value.delete(id) : favourites.value.add(id);
-  localStorage.setItem('favourites', JSON.stringify([...favourites.value]));
+const toggleFavourite = async (spotId) => {
+  if (!userId.value) return;
+
+  const url = favourites.value.has(spotId)
+    ? '/favorites/remove'
+    : '/favorites/add';
+
+  await apiFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId.value, spot_id: spotId }),
+  });
+
+  if (favourites.value.has(spotId)) {
+    favourites.value.delete(spotId);
+  } else {
+    favourites.value.add(spotId);
+  }
 };
 
 function formatOpeningHours(listing, selectedDay) {
@@ -287,7 +306,18 @@ function getOpenStatus(listing, selectedDay) {
 }
 
 onMounted(async () => {
+ onAuthStateChanged(getAuth(), async (user) => {
+    if (!user || !user.email.endsWith('@bu.edu')) return;
+
+    setLoggedIn(true);
+    const meRes = await apiFetch('/users/me');
+    userId.value = meRes.user_id;
+
+    const favRes = await apiFetch(`/favorites/user/${userId.value}`);
+    favourites.value = new Set(favRes.data.map(s => s.spot_id));
+  });
   try {
+
     const spotsData = await apiFetch(`/study_spots?weekday=${selectedDay.value}`);
 
     const spotMap = {};

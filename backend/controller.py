@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.logger import logger
-from pydantic import BaseModel
 from auth import get_current_user, login_with_firebase, verify_firebase_token, get_current_admin
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
     get_reviews_for_spot, get_top_tags_per_spot, check_user_review, get_study_spot_by_id, check_or_add_user, \
-    get_user_info_by_email
-from datetime import timedelta
+    get_user_info_by_email, get_reviews_by_user, get_user_favorites, remove_favorite, add_favorite, add_flag, \
+    get_flags_for_spot, update_profile_picture, get_profile_picture
+
+from pydantic import BaseModel
+from typing import Optional
+
 from fastapi import Path
 from crud import update_user_profile,get_db_connection
 
@@ -37,22 +40,22 @@ def db_health_check():
 def login(firebase_token: str):
     return login_with_firebase(firebase_token)
 
-
-# controller.py
 @router.get("/users/me")
 def get_my_profile(current: dict = Depends(get_current_user)):
-    # current["email"] is pulled straight from Firebase
-    user_id = check_or_add_user(current["email"])
-    user    = get_user_info_by_email(current["email"])
-    return {"user_id": user_id, "is_new_user": False, "user_info": user}
+    user_id, is_new_user = check_or_add_user(current["email"])
+    user = get_user_info_by_email(current["email"])
+    return {"user_id": user_id, "is_new_user": is_new_user, "user_info": user}
 
 
 @router.post("/users/{user_id}/complete_profile")
-def complete_user_profile(user_id: int,
-                           degree: str = Body(...),
-                           academic_level: str = Body(...),
-                           bu_college: str = Body(...)):
-    update_user_profile(user_id, degree, academic_level, bu_college)
+def complete_user_profile(
+    user_id: int,
+    degree: str = Body(...),
+    academic_level: str = Body(...),
+    bu_college: str = Body(...),
+    personal_tags: str = Body(default=None)
+):
+    update_user_profile(user_id, degree, academic_level, bu_college, personal_tags)
     return {"message": "Profile updated successfully"}
 
 
@@ -164,8 +167,7 @@ def remove_study_spot(spot_id: int, user: dict = Depends(get_current_admin)):
     return delete_study_spot(spot_id)
 
 
-from pydantic import BaseModel
-from typing import Optional
+#Reviews
 
 class ReviewCreate(BaseModel):
     spot_id: int
@@ -223,6 +225,54 @@ def check_if_user_reviewed_spot(
     current_user: dict = Depends(get_current_user)
 ):
     email = current_user["email"]
-    user_id = check_or_add_user(email)
+    user_id, _ = check_or_add_user(email)
+    print(f"[DEBUG] Checking review existence for user_id={user_id}, spot_id={spot_id}")
     exists = check_user_review(user_id, spot_id)
     return {"review_exists": exists}
+
+@router.get("/users/{user_id}/reviews")
+def fetch_user_reviews(user_id: int):
+    return {"reviews": get_reviews_by_user(user_id)}
+
+#FLAGS AND FAVES
+
+class FavoriteRequest(BaseModel):
+    user_id: int
+    spot_id: int
+@router.post("/favorites/add")
+def add_fav(payload: FavoriteRequest, user: dict = Depends(get_current_user)):
+    return add_favorite(payload.user_id, payload.spot_id)
+@router.post("/favorites/remove")
+def remove_fav(payload: FavoriteRequest, user: dict = Depends(get_current_user)):
+    return remove_favorite(payload.user_id, payload.spot_id)
+
+@router.get("/favorites/user/{user_id}")
+def get_user_fav_spots(user_id: int, user: dict = Depends(get_current_user)):
+    return {"data": get_user_favorites(user_id)}
+
+class FlagRequest(BaseModel):
+    user_id: int
+    spot_id: int
+    reason: str
+
+# Submit a flag for a specific study spot (User Only)
+@router.post("/flags")
+def create_flag(payload: FlagRequest, user: dict = Depends(get_current_user)):
+    return add_flag(payload.user_id, payload.spot_id, payload.reason)
+
+# View all flags for a specific study spot (Admin Only)
+@router.get("/flags/{spot_id}")
+def list_flags(spot_id: int, user: dict = Depends(get_current_admin)):
+    return {"data": get_flags_for_spot(spot_id)}
+
+
+# Update profile image for a user (User Only)
+@router.post("/users/{user_id}/profile-image")
+def set_profile_image(user_id: int, img_path: str, user: dict = Depends(get_current_user)):
+    return update_profile_picture(user_id, img_path)
+
+
+# Get profile image for a user (User Only)
+@router.get("/users/{user_id}/profile-image")
+def fetch_profile_image(user_id: int, user: dict = Depends(get_current_user)):
+    return get_profile_picture(user_id)

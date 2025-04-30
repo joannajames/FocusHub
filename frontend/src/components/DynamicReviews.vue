@@ -75,16 +75,6 @@
               Error: you've already posted a review for this spot
             </div>
           </div>
-
-          <div v-if="showCompleteProfilePopup" class="login-popup">
-            <div class="popup-content">
-                Please complete your profile!
-                <br><br>
-                <button @click="goToCompleteProfileForm">Fill Profile</button>
-            </div>
-          </div>
-
-
           <div v-if="showForm" class="form-popup">
             <form class="attributes-form" @submit.prevent>
               <div class="submit-icon-wrapper">
@@ -234,9 +224,9 @@
                 <div class="flag-date-wrapper">
                   <p class="review-date">({{ formatTimeAgo(review.timestamp) }})</p>
                   <img :src="flags.has(review.id) ? '/icons/Full_Flag.png' : '/icons/Flag.png'"
-                       alt="Flag Post"
-                       class="flag-icon"
-                       @click="() => { toggleFlag(review.id); toggleFlagPopup(); }" />
+                     alt="Flag Post"
+                     class="flag-icon"
+                     @click="() => { toggleFlag(review.id); toggleFlagPopup(review); }" />
                 </div>
                 <div class="review-tags">
                   <span v-for="(tag, j) in review.tags" :key="j" :class="['tag', tagClasses[tag]]">
@@ -296,16 +286,18 @@ import { formatDistanceToNow } from 'date-fns';
 
 
 const username = ref('Name');
+const user_id = ref(null);
 const selectedTag = ref('');
 const flagOptions = flagTags;
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const listing = ref();
+const flagReview = ref(null); // Holds the review object being flagged
 const topTagsPerSpot = ref({});
 const selectedDay = ref(''); // Added selectedDay ref
 const currentDayHours = ref(null); // Added currentDayHours ref
 const currentDay = ref(''); // Added currentDay ref
 const reviews = ref([]); // Added missing reviews ref
-
+const spotId = parseInt(route.params.id);
 const auth = getAuth();
 const firebaseUser = ref(null);
 const showError = () => { /* your toast/toastr call */ };
@@ -398,16 +390,21 @@ function getOpenStatus(listing, selectedDay) {
 }
 
 onMounted(async () => {
-  const storedUsername = localStorage.getItem('username');
-  if (storedUsername) {
-    username.value = storedUsername;
-    console.log(username.value);
-  }
 
-  const storedUserId = localStorage.getItem('user_id');
-  if (storedUserId) {
-    user_id.value = storedUserId;
-  }
+    onAuthStateChanged(getAuth(), async (user) => {
+      if (!user || !user.email.endsWith('@bu.edu')) return;
+
+      setLoggedIn(true);
+      try {
+        const res = await apiFetch('/users/me');
+        user_id.value = res.user_id;
+        username.value = res.user_name || 'Name';
+        reviewForm.value.user_id = res.user_id;
+      } catch (err) {
+        console.error("Could not fetch user ID:", err);
+      }
+    });
+
 
   try {
     // Get the current day of the week
@@ -485,6 +482,7 @@ onMounted(async () => {
       tags: review.review_tags ? review.review_tags.split(',').map(tag => tag.trim()) : [],
       timestamp: review.timestamp,
     }));
+    console.log("Review data parsed:", reviews.value);
 
     onAuthStateChanged(auth, async (user) => {
       firebaseUser.value = user;
@@ -498,8 +496,9 @@ onMounted(async () => {
       }
       setLoggedIn(true);
       try {
-        const { user_id } = await apiFetch('/users/me');
+        const { user_id, user_name } = await apiFetch('/users/me');
         reviewForm.value.user_id = user_id;
+        username.value = user_name || 'Name';
         showReviewForm();
       } catch (err) {
         showError('Could not fetch your profile; try again.');
@@ -522,57 +521,70 @@ const navigateTo = (path) => {window.location.href = path; showDropdown.value = 
 const showForm = ref(false);
 
 const showFlagPopup = ref(false);
-const toggleFlagPopup = () => {
+const toggleFlagPopup = (review) => {
+  flagReview.value = review;
   showFlagPopup.value = !showFlagPopup.value;
 };
-const submitFlagForm = () => {
-  console.log("Flag submitted with reason:", selectedTag.value, reviewText.value);
-  selectedTag.value = '';
-  reviewText.value = '';
-  showFlagPopup.value = false;
+
+const submitFlagForm = async () => {
+  const user = getAuth().currentUser;
+  const token = user ? await user.getIdToken() : null;
+
+  if (!token || !user_id.value || !flagReview.value || !selectedTag.value) return;
+
+  try {
+    await apiFetch('/flags', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Bearer ${token}`,
+      },
+      body: new URLSearchParams({
+        user_id: user_id.value,
+        spot_id: flagReview.value.spot_id,
+        reason: selectedTag.value,
+      }),
+    });
+
+    flags.value.add(flagReview.value.id);
+    selectedTag.value = '';
+    flagReview.value = null;
+    showFlagPopup.value = false;
+
+  } catch (err) {
+    console.error("Failed to submit flag:", err);
+  }
 };
+
 
 const showLoginPopup = ref(false);
 const alreadyReviewedPopup = ref(false);
 
-const user_id = ref(localStorage.getItem('user_id') || null);
-
-const showCompleteProfilePopup = ref(false);
-
-
-function goToCompleteProfileForm() {
-  showCompleteProfilePopup.value = false;
-  router.push(`/profile`);
-}
 
 const checkIfCanSubmit = async () => {
   isPlusRotated.value = !isPlusRotated.value;
 
-  // Reset any visible popups or form
-  showLoginPopup.value = false;
-  alreadyReviewedPopup.value = false;
-  showForm.value = false;
+  if (showLoginPopup.value || alreadyReviewedPopup.value || showForm.value) {
+    showLoginPopup.value = false;
+    alreadyReviewedPopup.value = false;
+    showForm.value = false;
+    return;
+  }
 
-  const token = localStorage.getItem('idToken'); // <- use consistent key
-  if (!isLoggedIn.value || !token) {
+  if (!isLoggedIn.value) {
     showLoginPopup.value = true;
     return;
   }
 
   try {
-    const { review_exists } = await apiFetch(`/reviews/${spot_id}/exists`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (review_exists) {
+    const response = await apiFetch(`/reviews/${spotId}/exists`);
+    if (response.review_exists) {
       alreadyReviewedPopup.value = true;
     } else {
       showForm.value = true;
     }
-  } catch (err) {
-    console.error('Error checking review exists:', err);
+  }catch (err) {
+    console.error('Error checking if review exists:', err);
   }
 };
 
@@ -727,15 +739,17 @@ async function handleProfileClick() {
     setLoggedIn(false);
     return;
   }
-
-  // 1) Sign in with Google
   await loginWithGoogle();
 
   setLoggedIn(true);
 
-  // 2) Fetch (and auto-create) the user record
-  await apiFetch('/users/me');
-  router.push('/');
+  const response = await apiFetch('/users/me');
+  const { is_new_user } = response;
+  if (is_new_user) {
+      router.push('/profile');
+  } else {
+      router.push('/the_hub');
+  }
 }
 
 </script>

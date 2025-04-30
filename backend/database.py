@@ -8,8 +8,9 @@ def get_db_connection():
     connection = mysql.connector.connect(
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        unix_socket=os.getenv("DB_HOST"),
-        database=os.getenv("DB_DATABASE"),
+        host=os.getenv("DB_HOST"),
+        database=os.getenv("DB_NAME"),
+        auth_plugin= 'mysql_native_password'
     )
     return connection
 

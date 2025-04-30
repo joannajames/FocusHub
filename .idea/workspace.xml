@@ -5,19 +5,36 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d986b1c3-b913-479d-83c0-4351fcb91715" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/serviceAccountKey.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/tests/unit/test_validation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/database/study_spots_db_favourites.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/database/study_spots_db_flags.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_1.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_122.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_123.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_221.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_222.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_223.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_321.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_322.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/images/CDS_323.jpg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/backend/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/crud.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/old_auth.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/study_spots_db_contact_us.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_contact_us.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/study_spots_db_hours.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_hours.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/study_spots_db_reviews.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_reviews.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/study_spots_db_spots.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_spots.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/study_spots_db_users.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/study_spots_db_users.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.firebase/hosting.ZGlzdA.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/icons/Full_Flag.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/icons/Full_Flag.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/icons/Full_Heart.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/icons/Full_Heart.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/icons/Star.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/icons/Star.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/images/CDS_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/CDS_3.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/images/Fitrec.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/Fitrec.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/images/GSU.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/images/GSU.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/ChatToUs.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChatToUs.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DynamicReviews.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/HomePage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HomePage.vue" afterDir="false" />
@@ -25,32 +42,6 @@
       <change beforePath="$PROJECT_DIR$/frontend/src/components/OurConstitution.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OurConstitution.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/TheHub.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TheHub.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/UserProfile.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/UserProfile.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/api.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/services/authService.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/authService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/INSTALLER" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/LICENSE.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/METADATA" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/RECORD" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/WHEEL" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11-0.14.0.dist-info/top_level.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_connection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_events.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_events.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_headers.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_headers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_readers.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_readers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_state.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_state.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_version.py" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/h11/_version.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/data/test-file" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/helpers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_against_stdlib_http.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_connection.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_events.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_headers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_helpers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_io.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_receivebuffer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_state.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/h11/tests/test_util.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,16 +86,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python tests.Python tests in test_validation.py.executor": "Run",
-    "Python.test_validation.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "Firebase__GCS__User__auth",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python tests.Python tests in test_validation.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_validation.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Firebase__GCS__User__auth&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Joanna\FocusHub\backend" />
@@ -196,6 +187,17 @@
       <updated>1744658583031</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />

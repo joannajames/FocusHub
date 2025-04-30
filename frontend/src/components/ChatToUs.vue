@@ -37,13 +37,6 @@
           <img src="/icons/FocusHub_Logo.png" alt="FocusHub Logo" class="logo-icon" @click="navigateTo('/')" />
         </div>
       </header>
-               div v-if="showCompleteProfilePopup" class="login-popup">
-                <div class="popup-content">
-                    Please complete your profile!
-                    <br><br>
-                    <button @click="goToCompleteProfileForm">Fill Profile</button>
-                </div>
-              </div>
               <div class="main-content">
                 <h1 class="title">chat to us</h1>
 
@@ -84,6 +77,7 @@
                   </form>
                 </div>
               </div>
+      </div>
   </div>
 </template>
 
@@ -134,14 +128,6 @@ const submitForm = () => {
   window.location.href = `mailto:hi.focushub@gmail.com?subject=${subject}&body=${body}`;
 };
 
-const showCompleteProfilePopup = ref(false);
-
-
-function goToCompleteProfileForm() {
-  showCompleteProfilePopup.value = false;
-  router.push('/profile');  // or wherever you want them to fill in their profile
-}
-
 
 async function handleProfileClick() {
   if (isLoggedIn.value) {
@@ -149,16 +135,19 @@ async function handleProfileClick() {
     setLoggedIn(false);
     return;
   }
-
-  // 1) Sign in with Google
   await loginWithGoogle();
 
   setLoggedIn(true);
 
-  // 2) Fetch (and auto-create) the user record
-  await apiFetch('/users/me');
-  router.push('/');
+  const response = await apiFetch('/users/me');
+  const { is_new_user } = response;
+  if (is_new_user) {
+      router.push('/profile');
+  } else {
+      router.push('/the_hub');
+  }
 }
+
 </script>
 
 <style scoped>
