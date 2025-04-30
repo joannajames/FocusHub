@@ -3,22 +3,16 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/firebase";
 
 export async function loginWithGoogle() {
-  const result = await signInWithPopup(auth, provider);
-  const idToken = await result.user.getIdToken();
+  // 1) sign in via Firebase
+  const result  = await signInWithPopup(auth, provider);
+  const idToken = await result.user.getIdToken(/* forceRefresh */ true);
+  const email   = result.user.email;
+  const username= email.split("@")[0];
 
-  const email = result.user.email;
-  const username = email.split('@')[0];
-
+  // 2) store for later API calls
   localStorage.setItem("username", username);
-  // Send to backend to get JWT
-  const res = await fetch("https://focus-hub-backend-780726687923.us-east1.run.app", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token: idToken }),
-  });
 
-  const data = await res.json();
-  localStorage.setItem("jwt", data.access_token);
-
-  return data;
+     // 3) keep only the Firebase ID-token
+  localStorage.setItem("idToken", idToken);
+  return { email, username };
 }

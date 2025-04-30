@@ -212,28 +212,26 @@ def delete_study_spot(spot_id):
 
 #REVIEW LOGIC
 # Add a new review       
-def add_review(user_id, spot_id, rating, review_content, review_tags, review_img_url):
-    conn = None
-    cursor = None
+def add_review(user_id, spot_id, rating, review_content, review_tags=None, review_img=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
         query = """
-            INSERT INTO reviews (user_id, spot_id, rating, review_content, review_tags, review_img_url)
+            INSERT INTO reviews (user_id, spot_id, review_content, rating, review_tags, review_img)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
-        values = (user_id, spot_id, rating, review_content, review_tags, review_img_url)
-        cursor.execute(query, values)
+        cursor.execute(query, (user_id, spot_id, review_content, rating, review_tags, review_img))
         conn.commit()
-        return {"message": "Review submitted successfully"}
+        return {"message": "Review successfully added!"}
+
     except Exception as e:
-        logger.error(f"Error adding review: {e}")
-        raise HTTPException(status_code=500, detail="Database error")
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        cursor.close()
+        conn.close()
 
 def get_top_tags_per_spot(limit=3):
     try:

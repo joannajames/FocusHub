@@ -97,7 +97,7 @@ import { useAuthStatus } from '@/store/authStatus';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import router from "@/router";
-import axios from 'axios';
+import { apiFetch } from '@/services/api';
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
 
 
@@ -135,12 +135,7 @@ const submitForm = () => {
 };
 
 const showCompleteProfilePopup = ref(false);
-const completeProfileUserId = ref(null);
 
-function openCompleteProfilePopup(userId) {
-  showCompleteProfilePopup.value = true;
-  completeProfileUserId.value = userId;
-}
 
 function goToCompleteProfileForm() {
   showCompleteProfilePopup.value = false;
@@ -152,27 +147,17 @@ async function handleProfileClick() {
   if (isLoggedIn.value) {
     await signOut(auth);
     setLoggedIn(false);
-  } else {
-    const userCredential = await loginWithGoogle();
-    const email = userCredential.user.email;
-
-    const tokenResponse = await axios.post('/token', { email: email });
-    const token = tokenResponse.data.access_token;
-    localStorage.setItem('token', token);
-    setLoggedIn(true);
-
-    const profileResponse = await axios.get('/users/me', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (profileResponse.data.is_new_user) {
-      openCompleteProfilePopup(profileResponse.data.user_id);
-    } else {
-      router.push('/');
-    }
+    return;
   }
+
+  // 1) Sign in with Google
+  await loginWithGoogle();
+
+  setLoggedIn(true);
+
+  // 2) Fetch (and auto-create) the user record
+  await apiFetch('/users/me');
+  router.push('/');
 }
 </script>
 

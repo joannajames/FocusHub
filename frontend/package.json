@@ -12,6 +12,7 @@
     "@fontsource/rubik-gemstones": "^5.2.5",
     "axios": "^1.9.0",
     "core-js": "^3.8.3",
+    "date-fns": "^4.1.0",
     "firebase": "^11.6.0",
     "vue": "^3.2.13",
     "vue-router": "^4.5.0"

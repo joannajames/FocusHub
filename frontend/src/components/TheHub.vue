@@ -154,10 +154,23 @@ const { isLoggedIn, setLoggedIn } = useAuthStatus();
 const router = useRouter();
 const goToReviews = (id) => router.push(`/reviews/${id}`);
 const goToProfile = () => { showDropdown.value = false; router.push(isLoggedIn.value ? '/profile' : '/unavailable'); };
-function handleProfileClick() {
-  isLoggedIn.value ? signOut(auth).then(() => setLoggedIn(false)) : loginWithGoogle().then(() => setLoggedIn(true));
-}
 
+async function handleProfileClick() {
+  if (isLoggedIn.value) {
+    await signOut(auth);
+    setLoggedIn(false);
+    return;
+  }
+
+  // 1) Sign in with Google
+  await loginWithGoogle();
+
+  setLoggedIn(true);
+
+  // 2) Fetch (and auto-create) the user record
+  await apiFetch('/users/me');
+  router.push('/');
+}
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const currentDay = ref(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
 const selectedDay = ref(currentDay.value);

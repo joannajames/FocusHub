@@ -1,23 +1,27 @@
 <template>
-  <router-view/>
+  <router-view />
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebase';
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('userEmail', user.email); // optional
-  } else {
-    localStorage.setItem('isLoggedIn', 'false');
-    localStorage.removeItem('userEmail');
-  }
-});
+import { defineComponent, onMounted } from 'vue';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useAuthStatus } from '@/store/authStatus';
 
 export default defineComponent({
-  name: 'App'
+  name: 'App',
+  setup() {
+    const { setLoggedIn } = useAuthStatus();
+
+    onMounted(() => {
+      const auth = getAuth();
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.email.endsWith("@bu.edu")) {
+          setLoggedIn(true);
+        } else {
+          setLoggedIn(false);
+        }
+      });
+    });
+  }
 });
 </script>

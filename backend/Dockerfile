@@ -15,5 +15,9 @@ COPY . .
 # Expose the port
 EXPOSE 8000
 
+#Firebase Auth
+ENV GOOGLE_APPLICATION_CREDENTIALS=serviceAccountKey.json
+
+
 # Command to run the app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

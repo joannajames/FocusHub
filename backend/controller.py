@@ -1,21 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.logger import logger
 from pydantic import BaseModel
-from auth import get_current_user,login_with_firebase, get_current_admin, create_access_token, verify_firebase_token
+from auth import get_current_user, login_with_firebase, verify_firebase_token, get_current_admin
 from crud import get_all_study_spots, add_study_spot, update_study_spot, delete_study_spot, add_review, \
     get_reviews_for_spot, get_top_tags_per_spot, check_user_review, get_study_spot_by_id, check_or_add_user, \
     get_user_info_by_email
 from datetime import timedelta
 from fastapi import Path
-from crud import update_user_profile
+from crud import update_user_profile,get_db_connection
 
 router = APIRouter()
 
 #Debugging
-from crud import get_db_connection
-from fastapi import APIRouter
-
-router = APIRouter()
 
 @router.get("/db_health")
 def db_health_check():
@@ -36,30 +32,20 @@ def db_health_check():
 
 
 # Authorization and Authentication
-@router.post("/auth/google")
-def google_login(token: str):
-    user_info = verify_firebase_token(token)
-    jwt_token = create_access_token(data={"sub": user_info["email"]})
-    return {"access_token": jwt_token, "token_type": "bearer"}
-
-
 
 @router.post("/token")
 def login(firebase_token: str):
     return login_with_firebase(firebase_token)
 
 
+# controller.py
 @router.get("/users/me")
 def get_my_profile(current: dict = Depends(get_current_user)):
-    user = get_user_info_by_email(current["email"])
-    if not user:
-        raise HTTPException(404, "User not found")
-    is_new = not (user.get("degree") and user.get("academic_level") and user.get("bu_college"))
-    return {
-      "user_id":    user["user_id"],
-      "is_new_user": is_new,
-      "user_info":  user
-    }
+    # current["email"] is pulled straight from Firebase
+    user_id = check_or_add_user(current["email"])
+    user    = get_user_info_by_email(current["email"])
+    return {"user_id": user_id, "is_new_user": False, "user_info": user}
+
 
 @router.post("/users/{user_id}/complete_profile")
 def complete_user_profile(user_id: int,
@@ -178,32 +164,54 @@ def remove_study_spot(spot_id: int, user: dict = Depends(get_current_admin)):
     return delete_study_spot(spot_id)
 
 
-#Reviews
-# # Submit a review (User only)
-# @router.post("/reviews")
-# def create_review(spot_id: int, rating: int, review_content: str, user: dict = Depends(get_current_user)):
-#     user_email = user["email"]
-#     user_info = get_user_info_by_email(user_email)
-#     user_id = user_info["user_id"]
-#     return add_review(user_id, spot_id, rating, review_content)
+from pydantic import BaseModel
+from typing import Optional
+
+class ReviewCreate(BaseModel):
+    spot_id: int
+    rating: int
+    review_content: str
+    review_tags: Optional[str] = None
+    review_img: Optional[str] = None
+
+from fastapi import Body
+from typing import Optional
+
 
 @router.post("/reviews")
 def create_review(
-    spot_id: int,
-    rating: int,
-    review_content: str,
+    spot_id: int = Body(...),
+    rating: int = Body(...),
+    review_content: str = Body(...),
+    review_tags: Optional[str] = Body(default=""),        # optional default ""
+    review_img: Optional[str] = Body(default=None),      # optional default None
     user: dict = Depends(get_current_user)
 ):
-    # 1) Ensure fresh row exists
-    user_id = user["user_id"]
+    # 1) Use email to find user_id from DB
+    email = user["email"]
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
-    # 2) Prevent duplicates
-    if check_user_review(user_id, spot_id):
-        raise HTTPException(400, "You’ve already reviewed this spot")
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE bu_user_id = %s", (email,))
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(404, detail="User not found in DB")
 
-    # 3) Insert
-    return add_review(user_id, spot_id, rating, review_content)
+        user_id = result["user_id"]
 
+        # 2) Prevent duplicates
+        if check_user_review(user_id, spot_id):
+            raise HTTPException(400, "You’ve already reviewed this spot")
+
+        # 3) Insert review
+        print(f"Inserting review for user_id={user_id}, spot_id={spot_id}")
+
+        return add_review(user_id, spot_id, rating, review_content, review_tags, review_img)
+
+    finally:
+        cursor.close()
+        conn.close()
 # Get reviews for a specific study spot (Public)
 @router.get("/reviews/{spot_id}")
 def read_reviews(spot_id: int):
@@ -214,5 +222,7 @@ def check_if_user_reviewed_spot(
     spot_id: int,
     current_user: dict = Depends(get_current_user)
 ):
-    exists = check_user_review(current_user["user_id"], spot_id)   # :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
+    email = current_user["email"]
+    user_id = check_or_add_user(email)
+    exists = check_user_review(user_id, spot_id)
     return {"review_exists": exists}

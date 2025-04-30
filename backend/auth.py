@@ -1,39 +1,32 @@
+import firebase_admin
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
-from google.oauth2 import id_token
-from google.auth.transport import requests
+from firebase_admin import auth, credentials,_apps, initialize_app
 from database import get_db_connection
 from datetime import datetime, timedelta
 import os
 
 # --- Setup ---
-GOOGLE_CLIENT_ID = "780726687923-hqvono1d8ln6900o0gcdatahjditpqp8.apps.googleusercontent.com"
-SECRET_KEY = "faefdfafadfouhaoue34q8749813y45rh13qoquyrhq"  # use strong secret key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
-bearer_scheme = HTTPBearer()
-
+# One-time Firebase initialization
+if not firebase_admin._apps:
+    cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "serviceAccountKey.json")
+    cred = credentials.Certificate(cred_path)
+    firebase_admin.initialize_app(cred)
 # --- Verify Firebase ID Token ---
-def verify_firebase_token(firebase_token: str):
+def verify_firebase_token(token: str):
     try:
-        idinfo = id_token.verify_oauth2_token(firebase_token, requests.Request(), GOOGLE_CLIENT_ID)
-        email = idinfo['email']
-        return email
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token  # includes 'email', 'uid', 'email_verified', etc.
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase token")
 
-# --- Create your own JWT Token (for your app sessions) ---
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 # --- Backend API to login: Frontend will send Firebase token here ---
+
 def login_with_firebase(firebase_token: str):
-    email = verify_firebase_token(firebase_token)
+    decoded = verify_firebase_token(firebase_token)
+    email = decoded["email"]
 
     # Lookup user info in your database
     conn = get_db_connection()
@@ -51,34 +44,32 @@ def login_with_firebase(firebase_token: str):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        jwt_data = {
-            "sub": email,
+        return {
             "user_id": user["user_id"],
             "is_admin": bool(user["admin_access"]),
+            "email": email,
         }
-
-        access_token = create_access_token(jwt_data)
-
-        return {"access_token": access_token, "token_type": "bearer"}
 
     finally:
         cursor.close()
         conn.close()
 
+bearer = HTTPBearer()
 # --- Verify your own JWT in protected routes ---
-def get_current_user(credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)):
-    token = credentials.credentials
+async def get_current_user(
+    creds: HTTPAuthorizationCredentials = Depends(bearer)
+):
+    """
+    Reads the raw Firebase ID-token from the Authorization header,
+    verifies it, and returns the decoded payload (including 'email').
+    """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return {
-            "email": payload.get("sub"),
-            "user_id": payload.get("user_id"),
-            "is_admin": payload.get("is_admin", False),
-        }
-    except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid access token")
+        user_info = verify_firebase_token(creds.credentials)
+        return user_info
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase token")
 
-# --- Check if user is admin ---
+# Function to check if the user is an admin
 def get_current_admin(user: dict = Depends(get_current_user)):
     if not user["is_admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")

@@ -1,13 +1,47 @@
+import { getAuth } from "firebase/auth";
+
 export async function apiFetch(endpoint, options = {}) {
   const baseUrl = process.env.VUE_APP_API_URL;
-  console.log('BASE URL being used:', baseUrl);
 
-  const response = await fetch(`${baseUrl}${endpoint}`, options);
+  // Get Firebase ID token
+  const auth = getAuth();
+  const waitForUser = () =>
+    new Promise((resolve, reject) => {
+      const unsub = auth.onAuthStateChanged((user) => {
+        unsub();
+        if (user) resolve(user);
+        else reject(new Error("User not authenticated."));
+      });
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API Error: ${response.status} ${errorText}`);
+  const user = auth.currentUser || await waitForUser();
+  const idToken = await user.getIdToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    ...options.headers,
+  };
+
+  console.log("About to fetch:", `${baseUrl}${endpoint}`);
+  const resp = await fetch(`${baseUrl}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  let responseBody;
+  try {
+    responseBody = await resp.clone().json();
+  } catch (e) {
+    responseBody = await resp.text();
   }
 
-  return response.json();
+  if (!resp.ok) {
+    const message = typeof responseBody === "string"
+      ? responseBody
+      : responseBody.detail || "Unknown error";
+    throw new Error(`API Error ${resp.status}: ${message}`);
+  }
+
+  return responseBody;
 }

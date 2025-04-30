@@ -283,27 +283,39 @@
 import { useRoute } from 'vue-router';
 const route = useRoute();
 const spot_id = parseInt(route.params.id);
-import {onMounted, ref} from "vue";
+import { onMounted, ref } from "vue";
 import '@/assets/global.css';
 import { favourites, toggleFavourite } from '@/store/favourites';
-import {attributeTags, flagTags, tagColors} from "@/constants/Tags";
-import { signOut} from "firebase/auth";
-import {auth} from "@/firebase";
-import {loginWithGoogle} from "@/services/authService";
-import {useAuthStatus} from "@/store/authStatus";
-import { onAuthStateChanged } from 'firebase/auth';
+import { attributeTags, flagTags, tagColors } from "@/constants/Tags";
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { loginWithGoogle } from "@/services/authService";
+import { useAuthStatus } from "@/store/authStatus";
 import { apiFetch } from '@/services/api';
+import router from "@/router";
+import { formatDistanceToNow } from 'date-fns';
+
 
 const username = ref('Name');
 const selectedTag = ref('');
 const flagOptions = flagTags;
 const { isLoggedIn, setLoggedIn } = useAuthStatus();
-import router from "@/router";
 const listing = ref();
 const topTagsPerSpot = ref({});
 const selectedDay = ref(''); // Added selectedDay ref
 const currentDayHours = ref(null); // Added currentDayHours ref
 const currentDay = ref(''); // Added currentDay ref
+const reviews = ref([]); // Added missing reviews ref
+
+const auth = getAuth();
+const firebaseUser = ref(null);
+const showError = () => { /* your toast/toastr call */ };
+const showReviewForm = () => { /* flip a boolean to render the form */ };
+
+const reviewForm = ref({ user_id: null, spot_id: spot_id, rating: null, content: "" });
+
+function formatTimeAgo(dateString) {
+  return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+}
 
 function secondsToHHMM(seconds) {
   const date = new Date(seconds * 1000);
@@ -348,7 +360,6 @@ function formatOpeningHours(listing, selectedDay) {
     return `${openFormatted} - ${closeFormatted}`;
   }
 }
-
 
 function getOpenStatus(listing, selectedDay) {
   const todayHours = listing.hours?.[selectedDay];
@@ -455,7 +466,6 @@ onMounted(async () => {
       currentDayHours.value = currentHours;
     }
 
-
     const topTagsData = await apiFetch('/study_spots/top_tags');
     topTagsPerSpot.value = topTagsData.data;
     listing.value.tags = topTagsPerSpot.value[listing.value.id] || [];
@@ -476,20 +486,27 @@ onMounted(async () => {
       timestamp: review.timestamp,
     }));
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        isLoggedIn.value = true;
-        localStorage.setItem('user_id', user.uid);
-        user_id.value = user.uid;
-      } else {
-        isLoggedIn.value = false;
-        localStorage.removeItem('user_id');
-        user_id.value = null;
+    onAuthStateChanged(auth, async (user) => {
+      firebaseUser.value = user;
+      console.log("Authenticated user email:", user?.email);
+
+
+      // only BU addresses allowed
+      if (!user || !user.email.endsWith('@bu.edu')) {
+        showError('Please sign in with your BU email.');
+        return;
+      }
+      setLoggedIn(true);
+      try {
+        const { user_id } = await apiFetch('/users/me');
+        reviewForm.value.user_id = user_id;
+        showReviewForm();
+      } catch (err) {
+        showError('Could not fetch your profile; try again.');
       }
     });
-
-  } catch (err) {
-    console.error("Data fetch failed:", err);
+  } catch (error) {
+    console.error('Error loading spot data:', error);
   }
 });
 
@@ -522,61 +539,38 @@ const user_id = ref(localStorage.getItem('user_id') || null);
 
 const showCompleteProfilePopup = ref(false);
 
-function openCompleteProfilePopup(userId) {
-  showCompleteProfilePopup.value = true;
-  completeProfileUserId.value = userId;
-}
-
-const completeProfileUserId = ref(null);
 
 function goToCompleteProfileForm() {
   showCompleteProfilePopup.value = false;
   router.push(`/profile`);
 }
 
-
 const checkIfCanSubmit = async () => {
   isPlusRotated.value = !isPlusRotated.value;
 
-  if (showLoginPopup.value || alreadyReviewedPopup.value || showForm.value) {
-    showLoginPopup.value = false;
-    alreadyReviewedPopup.value = false;
-    showForm.value = false;
-    return;
-  }
+  // Reset any visible popups or form
+  showLoginPopup.value = false;
+  alreadyReviewedPopup.value = false;
+  showForm.value = false;
 
-  if (!isLoggedIn.value) {
-    showLoginPopup.value = true;
-    return;
-  }
-
-  const token = localStorage.getItem('access_token');
-  if (!token) {
+  const token = localStorage.getItem('idToken'); // <- use consistent key
+  if (!isLoggedIn.value || !token) {
     showLoginPopup.value = true;
     return;
   }
 
   try {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      showLoginPopup.value = true;
-      return;
-    }
-    const { review_exists } = await apiFetch(
-      `/reviews/${spot_id}/exists`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
+    const { review_exists } = await apiFetch(`/reviews/${spot_id}/exists`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (review_exists) {
       alreadyReviewedPopup.value = true;
     } else {
       showForm.value = true;
     }
-
   } catch (err) {
     console.error('Error checking review exists:', err);
   }
@@ -653,12 +647,9 @@ const tagClasses = tagColors;
 const showPreferenceCard = ref(false);
 
 const reviewTagsKey = `reviewTags-${spot_id}`;
-const reviewKey = `reviews-${spot_id}`;
 
 const selectedReviewTags = ref(JSON.parse(localStorage.getItem(reviewTagsKey) || '[]'));
 const tempSelectedReviewTags = ref([...selectedReviewTags.value]);
-
-const reviews = ref([]);
 
 const toggleTempTag = (tag) => {
   const index = tempSelectedReviewTags.value.indexOf(tag);
@@ -671,80 +662,82 @@ const updateReviewTags = () => {
   showPreferenceCard.value = false;
 };
 
-const submitForm = () => {
-  const newReview = {
-    id: crypto.randomUUID(),
-    tags: [...selectedReviewTags.value],
-    message: reviewText.value,
-    date: new Date().toISOString(),
-    image: uploadedImage.value,
-    rating: rating.value,
-  };
-  isPlusRotated.value = !isPlusRotated.value;
-  reviews.value = [newReview];
-  localStorage.setItem(reviewTagsKey, JSON.stringify(selectedReviewTags.value));
-  localStorage.setItem(reviewKey, JSON.stringify(reviews.value));
-  reviewText.value = '';
-  uploadedImage.value = '';
-  rating.value = 0;
-  hoverRating.value = 0;
+const submitForm = async () => {
+  const user = getAuth().currentUser;
+  const token = user ? await user.getIdToken() : null;
+
+  if (!token) {
+    showLoginPopup.value = true;
+    return;
+  }
+
+  try {
+    await apiFetch('/reviews', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        spot_id: spot_id,
+        rating: rating.value,
+        review_content: reviewText.value,
+        review_tags: selectedReviewTags.value.join(',')
+      })
+    });
+
+    // Refresh reviews
+    const reviewsData = await apiFetch(`/reviews/${spot_id}`);
+    if (Array.isArray(reviewsData.data)) {
+      reviews.value = reviewsData.data.map(review => ({
+        id: review.review_id,
+        user_id: review.user_id,
+        userName: review.user_name || "Name",
+        degree: review.degree || '',
+        academicLevel: review.academic_level || '',
+        college: review.bu_college || '',
+        content: review.review_content,
+        rating: review.rating,
+        image: review.review_img ? `/images/${review.review_img}` : null,
+        tags: review.review_tags ? review.review_tags.split(',').map(tag => tag.trim()) : [],
+        timestamp: review.timestamp,
+      }));
+    } else {
+      console.error("reviewsData.data is not an array:", reviewsData);
+      reviews.value = []; // fallback
+    }
+    // Reset form
+    reviewText.value = '';
+    uploadedImage.value = '';
+    rating.value = 0;
+    hoverRating.value = 0;
+    showForm.value = false;
+    isPlusRotated.value = false;
+
+  } catch (err) {
+    console.error('Failed to submit review:', err);
+  }
 };
 
-function formatTimeAgo(dateString) {
-  const now = new Date();
-  const past = new Date(dateString);
-  const diffMs = now - past;
 
-  const seconds = Math.floor(diffMs / 1000);
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  if (seconds < 60) return 'just now';
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`;
-  if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
-  return `${years} year${years > 1 ? 's' : ''} ago`;
-}
 
 async function handleProfileClick() {
   if (isLoggedIn.value) {
     await signOut(auth);
     setLoggedIn(false);
-  } else {
-    const userCredential = await loginWithGoogle();
-    const email = userCredential.user.email;
-
-    // Get the token
-    const tokenResponse = await apiFetch('/token', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const token = tokenResponse.data.access_token;
-    localStorage.setItem('token', token);
-    setLoggedIn(true);
-
-    // Get the user profile
-    const profileResponse = await apiFetch('/users/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (profileResponse.data.is_new_user) {
-      openCompleteProfilePopup(profileResponse.data.user_id);
-    } else {
-      router.push('/');
-    }
+    return;
   }
+
+  // 1) Sign in with Google
+  await loginWithGoogle();
+
+  setLoggedIn(true);
+
+  // 2) Fetch (and auto-create) the user record
+  await apiFetch('/users/me');
+  router.push('/');
 }
+
 </script>
 
 <style>
